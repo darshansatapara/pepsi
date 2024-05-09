@@ -1,12 +1,13 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import Home from "./Home";
 import CustomerDetails from "./CustomerDetailsPage";
-import Order from "./Orderpage";
+import OrderPage from './OrderPage';
 import AddCustomerPage from "./AddCustomerPage";
+import AddNewOrder from "./AddNewOrder";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -15,10 +16,10 @@ const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
       tabBarOptions={{
-        style: { backgroundColor: '#f2f2f2' },
+        style: { backgroundColor: "#f2f2f2" },
         labelStyle: { fontSize: 12 },
-        activeTintColor: 'blue',
-        inactiveTintColor: 'gray',
+        activeTintColor: "blue",
+        inactiveTintColor: "gray",
       }}
     >
       <Tab.Screen
@@ -32,7 +33,7 @@ const BottomTabNavigator = () => {
       />
       <Tab.Screen
         name="Orders"
-        component={Order}
+        component={OrderPage}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="list" size={size} color={color} />
@@ -56,8 +57,13 @@ const StackNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen name="Main" component={BottomTabNavigator} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="Main"
+          component={BottomTabNavigator}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="AddCustomer" component={AddCustomerPage} />
+        <Stack.Screen name="AddNewOrder" component={AddNewOrder} />
       </Stack.Navigator>
     </NavigationContainer>
   );

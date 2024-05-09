@@ -19,7 +19,7 @@ const AddCustomerPage = () => {
 
   const handleAddCustomer = () => {
     // Perform form validation
-    if (!fullname || !mobileNumber || !state || !city || !address || !pincode) {
+    if (!fullname || !mobileNumber || !city || !address || !pincode) {
       Alert.alert("Validation Error", "Please fill in all required fields");
       return;
     }
@@ -37,7 +37,7 @@ const AddCustomerPage = () => {
     // Show confirmation popup
     Alert.alert(
       "Confirm Details",
-      `Fullname: ${fullname}\nMobile Number: ${mobileNumber}\nWhatsApp Number: ${whatsappNumber}\nState: ${state}\nCity: ${city}\nAddress: ${address}\nPincode: ${pincode}`,
+      `Fullname: ${fullname}\nMobile Number: ${mobileNumber}\nCity: ${city}\nAddress: ${address}\nPincode: ${pincode}`,
       [
         { text: "Cancel", style: "cancel" },
         { text: "Confirm", onPress: () => handleConfirmation() },
