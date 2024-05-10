@@ -10,8 +10,10 @@ import {
   TextInput,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import { Feather } from "@expo/vector-icons";
+import moment from "moment";
+import CalendarPicker from "react-native-calendar-picker";
 
-// Mock order data
 const ordersData = [
   {
     id: 1,
@@ -34,7 +36,24 @@ const ordersData = [
     paymentAmount: 25,
     date: "2024-05-08",
   },
-  // Your order data here...
+  {
+    id: 4,
+    customerId: 5,
+    customerName: "Jane Doe",
+    orderDetails: [{ product: "Yellow Pepsi", quantity: 3 }],
+    paymentStatus: "Pending",
+    paymentAmount: 25,
+    date: "2024-05-25",
+  },
+  {
+    id: 5,
+    customerId: 4,
+    customerName: "Jane Doe",
+    orderDetails: [{ product: "Yellow Pepsi", quantity: 3 }],
+    paymentStatus: "Pending",
+    paymentAmount: 25,
+    date: "2024-05-28",
+  },
 ];
 
 const availableProducts = ["Red Pepsi", "Black Pepsi", "Yellow Pepsi"];
@@ -46,9 +65,11 @@ const OrderPage = ({ navigation }) => {
   const [editedQuantities, setEditedQuantities] = useState({});
   const [editedPaymentStatus, setEditedPaymentStatus] = useState("");
   const [availableOtherProducts, setAvailableOtherProducts] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [isCalendarVisible, setIsCalendarVisible] = useState(false);
 
   useEffect(() => {
-    // Fetch order data from backend server or local storage
     setOrders(ordersData);
   }, []);
 
@@ -65,7 +86,6 @@ const OrderPage = ({ navigation }) => {
     setEditedQuantities(quantities);
     setEditedPaymentStatus(order.paymentStatus);
 
-    // Determine available other products
     const orderedProducts = order.orderDetails.map((detail) => detail.product);
     const otherProducts = availableProducts.filter(
       (product) => !orderedProducts.includes(product)
@@ -76,15 +96,16 @@ const OrderPage = ({ navigation }) => {
   };
 
   const handleSaveEdit = () => {
-    // Update the payment status and quantity of the selected order
     const updatedOrders = orders.map((order) => {
       if (order.id === selectedOrder.id) {
-        const updatedOrderDetails = Object.keys(editedQuantities).map((product) => {
-          return {
-            product,
-            quantity: parseInt(editedQuantities[product]) || 0,
-          };
-        });
+        const updatedOrderDetails = Object.keys(editedQuantities).map(
+          (product) => {
+            return {
+              product,
+              quantity: parseInt(editedQuantities[product]) || 0,
+            };
+          }
+        );
         return {
           ...order,
           orderDetails: updatedOrderDetails,
@@ -100,15 +121,28 @@ const OrderPage = ({ navigation }) => {
   const handleAddOtherProduct = (product) => {
     const updatedQuantities = {
       ...editedQuantities,
-      [product]: "0", // Initialize quantity as 0 for the new product
+      [product]: "0",
     };
 
     setEditedQuantities(updatedQuantities);
-    setAvailableOtherProducts(availableOtherProducts.filter((p) => p !== product));
+    setAvailableOtherProducts(
+      availableOtherProducts.filter((p) => p !== product)
+    );
   };
 
-  const renderItem = ({ item }) => (
+  const handleDeleteOrder = (orderId) => {
+    const updatedOrders = orders.filter((order) => order.id !== orderId);
+    setOrders(updatedOrders);
+  };
+
+  const renderOrderItem = ({ item }) => (
     <View style={styles.orderCard}>
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={() => handleDeleteOrder(item.id)}
+      >
+        <Feather name="trash" size={24} color="red" />
+      </TouchableOpacity>
       <Text style={styles.customerInfo}>Customer ID: {item.customerId}</Text>
       <Text style={styles.customerInfo}>
         Customer Name: {item.customerName}
@@ -139,11 +173,47 @@ const OrderPage = ({ navigation }) => {
     </View>
   );
 
+  const filteredOrders = orders.filter(
+    (order) =>
+      order.customerName.toLowerCase().includes(searchText.toLowerCase()) &&
+      (!selectedDate || order.date === selectedDate)
+  );
+
+  const clearFilter = () => {
+    setSearchText("");
+    setSelectedDate(null);
+  };
+
   return (
     <View style={styles.container}>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.addButton} onPress={handleAddNewOrder}>
+          <Text>Add New Order</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.clearFilterButton}
+          onPress={clearFilter}
+        >
+          <Text>Clear Filter</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by customer name"
+          value={searchText}
+          onChangeText={(text) => setSearchText(text)}
+        />
+        <TouchableOpacity
+          style={styles.calendarIcon}
+          onPress={() => setIsCalendarVisible(true)}
+        >
+          <Feather name="calendar" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
       <FlatList
-        data={orders}
-        renderItem={renderItem}
+        data={filteredOrders}
+        renderItem={renderOrderItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.orderList}
       />
@@ -209,9 +279,32 @@ const OrderPage = ({ navigation }) => {
           </View>
         </View>
       </Modal>
-      <TouchableOpacity style={styles.addButton} onPress={handleAddNewOrder}>
-                <Text>Add New Order</Text>
-            </TouchableOpacity>
+      {isCalendarVisible && (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isCalendarVisible}
+          onRequestClose={() => setIsCalendarVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.calendarContainer}>
+              <CalendarPicker
+                onDateChange={(date) => {
+                  setSelectedDate(
+                    date ? moment(date).format("YYYY-MM-DD") : null
+                  );
+                  setIsCalendarVisible(false);
+                }}
+              />
+              <Button
+                title="Close"
+                onPress={() => setIsCalendarVisible(false)}
+                color="#ff7043"
+              />
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -220,6 +313,51 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  addButton: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "lightblue",
+    padding: 10,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  clearFilterButton: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "lightgray",
+    padding: 10,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    borderWidth: 1,
+    borderColor: "gray",
+    paddingHorizontal: 10,
+    marginRight: 10,
+  },
+  calendarIcon: {
+    padding: 5,
   },
   orderList: {
     paddingBottom: 20,
@@ -230,6 +368,12 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
+    position: "relative",
+  },
+  deleteButton: {
+    position: "absolute",
+    top: 5,
+    right: 5,
   },
   customerInfo: {
     fontWeight: "bold",
@@ -254,14 +398,11 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: "row",
-    // backgroundColor: "red",
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 5,
   },
-  tableCell: {
-    // flex: 1,
-  },
+  tableCell: {},
   editButton: {
     backgroundColor: "#ccc",
     paddingVertical: 5,
@@ -276,12 +417,7 @@ const styles = StyleSheet.create({
   orderInfo: {
     marginBottom: 5,
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
+
   modalContent: {
     backgroundColor: "#fff",
     padding: 20,
@@ -333,7 +469,19 @@ const styles = StyleSheet.create({
     backgroundColor: "lightblue",
     padding: 10,
     borderRadius: 5,
-},
+  },
+  calendarContainer: {
+    width: "100%",
+    height: "48%",
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    elevation: 5,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
 });
 
 export default OrderPage;
