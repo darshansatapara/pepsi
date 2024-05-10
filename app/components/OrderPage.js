@@ -183,7 +183,14 @@ const OrderPage = ({ navigation }) => {
     setSearchText("");
     setSelectedDate(null);
   };
+  const sortedOrders = [...orders].sort((a, b) => {
+    // Convert dates to Date objects for comparison
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
 
+    // Sort by descending order (newest first)
+    return dateB - dateA;
+  });
   return (
     <View style={styles.container}>
       <View style={styles.buttonContainer}>
@@ -212,7 +219,7 @@ const OrderPage = ({ navigation }) => {
         </TouchableOpacity>
       </View>
       <FlatList
-        data={filteredOrders}
+        data={sortedOrders}
         renderItem={renderOrderItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.orderList}
