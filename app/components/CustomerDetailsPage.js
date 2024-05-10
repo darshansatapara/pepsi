@@ -88,7 +88,7 @@ const CustomerDetailsPage = ({ navigation }) => {
     };
 
     const handleCustomerPress = (customer) => {
-        navigation.navigate("CustomerDetails", { customer });
+        navigation.navigate("CustomerProfile", { customer });
     };
 
     return (
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
         backgroundColor: "lightblue",
         padding: 10,
         borderRadius: 5,
-    },
-});
+    },  
+}); 
 
 export default CustomerDetailsPage;

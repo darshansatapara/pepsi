@@ -8,6 +8,7 @@ import CustomerDetails from "./CustomerDetailsPage";
 import OrderPage from './OrderPage';
 import AddCustomerPage from "./AddCustomerPage";
 import AddNewOrder from "./AddNewOrder";
+import CustomerProfile from "./CustomerProfilePage";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -64,6 +65,7 @@ const StackNavigator = () => {
         />
         <Stack.Screen name="AddCustomer" component={AddCustomerPage} />
         <Stack.Screen name="AddNewOrder" component={AddNewOrder} />
+        <Stack.Screen name="CustomerProfile" component={CustomerProfile} />
       </Stack.Navigator>
     </NavigationContainer>
   );

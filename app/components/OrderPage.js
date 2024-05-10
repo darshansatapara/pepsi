@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
+  Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { Feather } from "@expo/vector-icons";
@@ -68,10 +69,19 @@ const OrderPage = ({ navigation }) => {
   const [searchText, setSearchText] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
+  const [filterApplied, setFilterApplied] = useState(false);
 
   useEffect(() => {
     setOrders(ordersData);
   }, []);
+
+  useEffect(() => {
+    if (!searchText && !selectedDate) {
+      setFilterApplied(false);
+    } else {
+      setFilterApplied(true);
+    }
+  }, [searchText, selectedDate]);
 
   const handleAddNewOrder = () => {
     navigation.navigate("AddNewOrder");
@@ -183,22 +193,27 @@ const OrderPage = ({ navigation }) => {
     setSearchText("");
     setSelectedDate(null);
   };
-  const sortedOrders = [...orders].sort((a, b) => {
-    // Convert dates to Date objects for comparison
-    const dateA = new Date(a.date);
-    const dateB = new Date(b.date);
 
-    // Sort by descending order (newest first)
-    return dateB - dateA;
-  });
+  const noRecordsFound = (
+    <View style={styles.noRecordsFound}>
+      <Text>No records found</Text>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.addButton} onPress={handleAddNewOrder}>
+        <TouchableOpacity
+          style={[styles.addButton, filterApplied]}
+          onPress={handleAddNewOrder}
+        >
           <Text>Add New Order</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.clearFilterButton}
+          style={[
+            styles.clearFilterButton,
+            filterApplied && styles.filterApplied,
+          ]}
           onPress={clearFilter}
         >
           <Text>Clear Filter</Text>
@@ -218,8 +233,9 @@ const OrderPage = ({ navigation }) => {
           <Feather name="calendar" size={24} color="black" />
         </TouchableOpacity>
       </View>
+      {filteredOrders.length === 0 && filterApplied && noRecordsFound}
       <FlatList
-        data={sortedOrders}
+        data={filteredOrders}
         renderItem={renderOrderItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.orderList}
@@ -297,9 +313,10 @@ const OrderPage = ({ navigation }) => {
             <View style={styles.calendarContainer}>
               <CalendarPicker
                 onDateChange={(date) => {
-                  setSelectedDate(
-                    date ? moment(date).format("YYYY-MM-DD") : null
-                  );
+                  const formattedDate = date
+                    ? moment(date).format("YYYY-MM-DD")
+                    : null;
+                  setSelectedDate(formattedDate);
                   setIsCalendarVisible(false);
                 }}
               />
@@ -334,6 +351,10 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginRight: 10,
+  },
+  filterApplied: {
+    backgroundColor: "#85c27f",
+    color: "white",
   },
   modalContainer: {
     flex: 1,
@@ -469,13 +490,6 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-  },
-  addButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "lightblue",
-    padding: 10,
-    borderRadius: 5,
   },
   calendarContainer: {
     width: "100%",
