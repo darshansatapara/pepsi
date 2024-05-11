@@ -14,53 +14,12 @@ import { Picker } from "@react-native-picker/picker";
 import { Feather } from "@expo/vector-icons";
 import moment from "moment";
 import CalendarPicker from "react-native-calendar-picker";
-
-const ordersData = [
-  {
-    id: 1,
-    customerId: 1,
-    customerName: "John Doe",
-    orderDetails: [
-      { product: "Red Pepsi", quantity: 2 },
-      { product: "Black Pepsi", quantity: 1 },
-    ],
-    paymentStatus: "Paid",
-    paymentAmount: 50,
-    date: "2024-05-09",
-  },
-  {
-    id: 3,
-    customerId: 3,
-    customerName: "Jane Doe",
-    orderDetails: [{ product: "Yellow Pepsi", quantity: 3 }],
-    paymentStatus: "Pending",
-    paymentAmount: 25,
-    date: "2024-05-08",
-  },
-  {
-    id: 4,
-    customerId: 5,
-    customerName: "Jane Doe",
-    orderDetails: [{ product: "Yellow Pepsi", quantity: 3 }],
-    paymentStatus: "Pending",
-    paymentAmount: 25,
-    date: "2024-05-25",
-  },
-  {
-    id: 5,
-    customerId: 4,
-    customerName: "Jane Doe",
-    orderDetails: [{ product: "Yellow Pepsi", quantity: 3 }],
-    paymentStatus: "Pending",
-    paymentAmount: 25,
-    date: "2024-05-28",
-  },
-];
+import client from "../axios";
 
 const availableProducts = ["Red Pepsi", "Black Pepsi", "Yellow Pepsi"];
 
 const OrderPage = ({ navigation }) => {
-  const [orders, setOrders] = useState([]);
+  const [ordersDetails, setOrdersDetails] = useState([]);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [editedQuantities, setEditedQuantities] = useState({});
@@ -72,8 +31,19 @@ const OrderPage = ({ navigation }) => {
   const [filterApplied, setFilterApplied] = useState(false);
 
   useEffect(() => {
-    setOrders(ordersData);
+    fatchOrdersData();
   }, []);
+
+  const fatchOrdersData = async () => {
+    try {
+      const response = await client.get("/api/Order/getAllOrders");
+      setOrdersDetails(response.data);
+      console.log(response.data);
+    } catch (error) {
+      console.error(error);
+      console.error("Error finding the Order Data ", error);
+    }
+  };
 
   useEffect(() => {
     if (!searchText && !selectedDate) {
@@ -87,26 +57,32 @@ const OrderPage = ({ navigation }) => {
     navigation.navigate("AddNewOrder");
   };
 
-  const handleEditButtonPress = (order) => {
-    setSelectedOrder(order);
-    const quantities = {};
-    order.orderDetails.forEach((detail) => {
-      quantities[detail.product] = detail.quantity.toString();
-    });
-    setEditedQuantities(quantities);
-    setEditedPaymentStatus(order.paymentStatus);
+  // const handleEditButtonPress = (order) => {
+  //   setSelectedOrder(order);
+  //   const quantities = {};
+  //   if (order.orderDetails && Array.isArray(order.orderDetails)) {
+  //     order.orderDetails.forEach((detail) => {
+  //       if (detail.product && detail.quantity) {
+  //         quantities[detail.product] = detail.quantity.toString();
+  //       }
+  //     });
+  //   }
+  //   setEditedQuantities(quantities);
+  //   setEditedPaymentStatus(order.paymentStatus);
 
-    const orderedProducts = order.orderDetails.map((detail) => detail.product);
-    const otherProducts = availableProducts.filter(
-      (product) => !orderedProducts.includes(product)
-    );
-    setAvailableOtherProducts(otherProducts);
+  //   const orderedProducts = order.orderDetails
+  //     ? order.orderDetails.map((detail) => detail.product)
+  //     : [];
+  //   const otherProducts = availableProducts.filter(
+  //     (product) => !orderedProducts.includes(product)
+  //   );
+  //   setAvailableOtherProducts(otherProducts);
 
-    setEditModalVisible(true);
-  };
+  //   setEditModalVisible(true);
+  // };
 
   const handleSaveEdit = () => {
-    const updatedOrders = orders.map((order) => {
+    const updatedOrders = ordersDetails.map((order) => {
       if (order.id === selectedOrder.id) {
         const updatedOrderDetails = Object.keys(editedQuantities).map(
           (product) => {
@@ -124,7 +100,7 @@ const OrderPage = ({ navigation }) => {
       }
       return order;
     });
-    setOrders(updatedOrders);
+    setOrdersDetails(updatedOrders);
     setEditModalVisible(false);
   };
 
@@ -141,49 +117,53 @@ const OrderPage = ({ navigation }) => {
   };
 
   const handleDeleteOrder = (orderId) => {
-    const updatedOrders = orders.filter((order) => order.id !== orderId);
-    setOrders(updatedOrders);
+    const updatedOrders = ordersDetails.filter((order) => order.id !== orderId);
+    setOrdersDetails(updatedOrders);
   };
 
   const renderOrderItem = ({ item }) => (
-    <View style={styles.orderCard}>
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => handleDeleteOrder(item.id)}
-      >
-        <Feather name="trash" size={24} color="red" />
-      </TouchableOpacity>
-      <Text style={styles.customerInfo}>Customer ID: {item.customerId}</Text>
-      <Text style={styles.customerInfo}>
-        Customer Name: {item.customerName}
-      </Text>
-      <View style={styles.table}>
-        <View style={styles.tableHeaderRow}>
-          <Text style={styles.tableHeader}>Product</Text>
-          <Text style={styles.tableHeader}>Quantity</Text>
-        </View>
-        {item.orderDetails.map((order, index) => (
-          <View key={index} style={styles.tableRow}>
-            <Text style={styles.tableCell}>{order.product}</Text>
-            <Text style={styles.tableCell}>{order.quantity}</Text>
+    <>
+      <View style={styles.orderCard}>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDeleteOrder(item.orderID)}
+        >
+          <Feather name="trash" size={24} color="red" />
+        </TouchableOpacity>
+        <Text style={styles.customerInfo}>Customer ID: {item.customerID}</Text>
+        <Text style={styles.customerInfo}>
+          Customer Name: {item.customerName}
+        </Text>
+        <View style={styles.table}>
+          <View style={styles.tableHeaderRow}>
+            <Text style={styles.tableHeader}>Product</Text>
+            <Text style={styles.tableHeader}>Quantity</Text>
           </View>
-        ))}
+          {item.orderDetails.map((order, index) => (
+            <View key={index} style={styles.tableRow}>
+              <Text style={styles.tableCell}>{order.product}</Text>
+              <Text style={styles.tableCell}>{order.quantity}</Text>
+            </View>
+          ))}
+        </View>
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => handleEditButtonPress(item)}
+        >
+          <Text style={styles.editButtonText}>Edit</Text>
+        </TouchableOpacity>
+        <Text style={styles.orderInfo}>
+          Payment Status: {item.paymentStatus}
+        </Text>
+        <Text style={styles.orderInfo}>
+          Payment Amount: ₹{item.totalAmount}
+        </Text>
+        <Text style={styles.orderInfo}>Date: {item.date}</Text>
       </View>
-      <TouchableOpacity
-        style={styles.editButton}
-        onPress={() => handleEditButtonPress(item)}
-      >
-        <Text style={styles.editButtonText}>Edit</Text>
-      </TouchableOpacity>
-      <Text style={styles.orderInfo}>Payment Status: {item.paymentStatus}</Text>
-      <Text style={styles.orderInfo}>
-        Payment Amount: ₹{item.paymentAmount}
-      </Text>
-      <Text style={styles.orderInfo}>Date: {item.date}</Text>
-    </View>
+    </>
   );
 
-  const filteredOrders = orders.filter(
+  const filteredOrders = ordersDetails.filter(
     (order) =>
       order.customerName.toLowerCase().includes(searchText.toLowerCase()) &&
       (!selectedDate || order.date === selectedDate)
@@ -237,7 +217,7 @@ const OrderPage = ({ navigation }) => {
       <FlatList
         data={filteredOrders}
         renderItem={renderOrderItem}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.orderList}
       />
       <Modal

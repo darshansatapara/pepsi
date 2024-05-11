@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Picker } from "@react-native-picker/picker";
 import {
   View,
   Text,
@@ -9,11 +10,12 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
+import client from "../axios";
 
 const AddNewOrderPage = ({ navigation }) => {
   const [customerDetails, setCustomerDetails] = useState({
-    id: "",
-    name: "",
+    customerID: "",
+    customerName: "",
   });
   const [orderDetails, setOrderDetails] = useState({
     red: 0,
@@ -21,8 +23,6 @@ const AddNewOrderPage = ({ navigation }) => {
     yellow: 0,
   });
   const [totalAmount, setTotalAmount] = useState(0);
-  const [confirmationModalVisible, setConfirmationModalVisible] =
-    useState(false);
   const [mobileNumber, setMobileNumber] = useState("");
   const [confirmationShown, setConfirmationShown] = useState(false);
   const [currentDate, setCurrentDate] = useState("");
@@ -39,20 +39,26 @@ const AddNewOrderPage = ({ navigation }) => {
     if (mobileNumber.length === 10) {
       fetchCustomerDetails();
     } else {
-      setCustomerDetails({ id: "", name: "" });
+      setCustomerDetails({ customerID: "", customerName: "" });
     }
   }, [mobileNumber]);
 
-  const fetchCustomerDetails = () => {
+  const fetchCustomerDetails = async () => {
     if (mobileNumber === "") {
       Alert.alert("Error", "Please enter a mobile number");
       return;
     }
-    const fetchedCustomerDetails = {
-      id: "1",
-      name: "John Doe",
-    };
-    setCustomerDetails(fetchedCustomerDetails);
+    try {
+      let newmobileNumber = parseInt(mobileNumber);
+      const response = await client.get(
+        `/api/Customer/getCustomer/${newmobileNumber}`
+      );
+      setCustomerDetails(response.data);
+      // console.log(customerDetails.customerID);
+    } catch (error) {
+      console.error("Error fetching customer details:", error);
+      Alert.alert("Error", "Failed to fetch customer details");
+    }
   };
 
   const handleProductQuantityChange = (product, quantity) => {
@@ -75,37 +81,74 @@ const AddNewOrderPage = ({ navigation }) => {
     setTotalAmount(total);
   };
 
+  //handle confirmation for the sen the valuse of the order
   const handleConfirmOrder = () => {
-    if (!confirmationShown) {
-      const orderDetailsText = `Customer ID: ${customerDetails.id}\nCustomer Name: ${customerDetails.name}\n\nOrder Details:\nRed Pepsi: ${orderDetails.red}\nBlack Pepsi: ${orderDetails.black}\nYellow Pepsi: ${orderDetails.yellow}\n\nTotal Amount: ₹${totalAmount}\n\nDate: ${currentDate}`;
-      Alert.alert(
-        "Confirm Order",
-        orderDetailsText,
-        [
-          {
-            text: "Cancel",
-            style: "cancel",
+    const orderDetailsText = `Customer ID: ${customerDetails.customerID.toString()}\nCustomer Name: ${
+      customerDetails.customerName
+    }\n\nOrder Details:\nRed Pepsi: ${orderDetails.red}\nBlack Pepsi: ${
+      orderDetails.black
+    }\nYellow Pepsi: ${
+      orderDetails.yellow
+    }\n\nTotal Amount: ₹${totalAmount}\n\nDate: ${currentDate}`;
+
+    Alert.alert(
+      "Confirm Order",
+      orderDetailsText,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Confirm",
+          onPress: async () => {
+            try {
+              const response = await client.post("/api/Order/addNewOrder", {
+                mobileNumber,
+                customerID: customerDetails.customerID,
+                customerName: customerDetails.customerName,
+                orderDate: currentDate,
+                redPepsiQuantity: orderDetails.red,
+                blackPepsiQuantity: orderDetails.black,
+                yellowPepsiQuantity: orderDetails.yellow,
+                totalAmount,
+                paymentStatus: orderDetails.paymentStatus
+              });
+              console.log("Order placed successfully:", response.data);
+              Alert.alert(
+                "Success",
+                "Order placed successfully!",
+                [
+                  {
+                    text: "OK",
+                    onPress: () => {
+                      setMobileNumber("");
+                      setCustomerDetails({ customerID: "", customerName: "" });
+                      setOrderDetails({ red: 0, black: 0, yellow: 0 });
+                      setTotalAmount(0);
+                      navigation.goBack();
+                    },
+                  },
+                ],
+                { cancelable: false }
+              );
+            } catch (error) {
+              console.error("Error placing order:", error);
+              Alert.alert(
+                "Error",
+                "Failed to place order. Please try again later."
+              );
+            }
           },
-          {
-            text: "Confirm",
-            onPress: () => {
-              setConfirmationShown(true);
-              setCustomerDetails({ id: "", name: "" });
-              setOrderDetails({ red: 0, black: 0, yellow: 0 });
-              setTotalAmount(0);
-              setConfirmationModalVisible(false);
-              navigation.goBack();
-            },
-          },
-        ],
-        { cancelable: false }
-      );
-    }
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   const clearForm = () => {
     setMobileNumber("");
-    setCustomerDetails({ id: "", name: "" });
+    setCustomerDetails({ customerID: "", customerName: "" });
     setOrderDetails({ red: 0, black: 0, yellow: 0 });
     setTotalAmount(0);
     setConfirmationShown(false);
@@ -125,10 +168,10 @@ const AddNewOrderPage = ({ navigation }) => {
         />
       </View>
       <View style={styles.inputRow}>
-        <Text style={styles.label}>Customer ID:</Text>
+        <Text style={styles.label}>Customer ID: </Text>
         <TextInput
           style={styles.input2}
-          value={customerDetails.id}
+          value={customerDetails.customerID.toString()}
           editable={false}
         />
       </View>
@@ -136,17 +179,13 @@ const AddNewOrderPage = ({ navigation }) => {
         <Text style={styles.label}>Customer Name:</Text>
         <TextInput
           style={styles.input2}
-          value={customerDetails.name}
+          value={customerDetails.customerName}
           editable={false}
         />
       </View>
       <View style={styles.inputRow}>
         <Text style={styles.label}>Date:</Text>
-        <TextInput
-          style={styles.input2}
-          value={currentDate}
-          editable={false}
-        />
+        <TextInput style={styles.input2} value={currentDate} editable={false} />
       </View>
       <View style={styles.inputRow}>
         <Text style={styles.label}>Red Pepsi:</Text>
@@ -175,54 +214,29 @@ const AddNewOrderPage = ({ navigation }) => {
           keyboardType="numeric"
         />
       </View>
+      <View style={styles.inputRow}>
+        <Text style={styles.label}>Payment Status:</Text>
+        <Picker
+          style={styles.input}
+          selectedValue={orderDetails.paymentStatus}
+          onValueChange={(itemValue, itemIndex) =>
+            setOrderDetails({ ...orderDetails, paymentStatus: itemValue })
+          }
+        >
+          <Picker.Item label="Pending" value="pending" />
+          <Picker.Item label="Paid" value="paid" />
+        </Picker>
+      </View>
+
       <Text style={styles.totalAmount}>Total Amount: ₹{totalAmount}</Text>
       <View style={styles.buttonRow}>
         <Button title="Clear Form" onPress={clearForm} />
         <Button
           title="Confirm Order"
-          onPress={() => setConfirmationModalVisible(true)}
+          onPress={handleConfirmOrder}
           disabled={!totalAmount}
         />
       </View>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={confirmationModalVisible}
-        onRequestClose={() => setConfirmationModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Confirm Order</Text>
-            <Text style={styles.orderDetailsText}>
-              Customer ID: {customerDetails.id}
-            </Text>
-            <Text style={styles.orderDetailsText}>
-              Customer Name: {customerDetails.name}
-            </Text>
-            <Text style={styles.orderDetailsText}>Order Details:</Text>
-            <Text style={styles.orderDetailsText}>
-              Red Pepsi: {orderDetails.red}
-            </Text>
-            <Text style={styles.orderDetailsText}>
-              Black Pepsi: {orderDetails.black}
-            </Text>
-            <Text style={styles.orderDetailsText}>
-              Yellow Pepsi: {orderDetails.yellow}
-            </Text>
-            <Text style={styles.orderDetailsText}>
-              Total Amount: ₹{totalAmount}
-            </Text>
-            <Text style={styles.orderDetailsText}>Date: {currentDate}</Text>
-            <View style={styles.buttonRow}>
-              <Button title="Confirm" onPress={handleConfirmOrder} />
-              <Button
-                title="Cancel"
-                onPress={() => setConfirmationModalVisible(false)}
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -286,6 +300,7 @@ const styles = StyleSheet.create({
   },
   orderDetailsText: {
     marginBottom: 5,
+    fontSize: 15,
   },
   buttonRow: {
     flexDirection: "row",

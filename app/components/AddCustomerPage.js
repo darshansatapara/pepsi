@@ -8,27 +8,27 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
+import client from "../axios";
 
-const AddCustomerPage = () => {
-  const [customers, setCustomers] = useState([]);
-  const [fullname, setFullname] = useState("");
+const AddCustomerPage = ({ route }) => {
+  const { fetchCustomerData } = route.params;
+  const [customerName, setCustomerName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
   const [pincode, setPincode] = useState("");
 
   const handleAddCustomer = () => {
-    // Perform form validation
-    if (!fullname || !mobileNumber || !city || !address || !pincode) {
+    if (!customerName || !mobileNumber || !city || !address || !pincode) {
       Alert.alert("Validation Error", "Please fill in all required fields");
       return;
     }
 
-    // Validate mobile number and pincode format
     if (!/^\d{10}$/.test(mobileNumber)) {
       Alert.alert("Validation Error", "Mobile number must be 10 digits");
       return;
     }
+
     if (!/^\d{6}$/.test(pincode)) {
       Alert.alert("Validation Error", "Pincode must be 6 digits");
       return;
@@ -37,36 +37,43 @@ const AddCustomerPage = () => {
     // Show confirmation popup
     Alert.alert(
       "Confirm Details",
-      `Fullname: ${fullname}\nMobile Number: ${mobileNumber}\nCity: ${city}\nAddress: ${address}\nPincode: ${pincode}`,
+      `Customer Name: ${customerName}\nMobile Number: ${mobileNumber}\nCity: ${city}\nAddress: ${address}\nPincode: ${pincode}`,
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Confirm", onPress: () => handleConfirmation() },
+        { text: "Confirm", onPress: handleConfirmation },
       ]
     );
   };
 
-  const handleConfirmation = () => {
-    // Save customer data to backend server or local storage
-    const newCustomer = {
-      fullname,
-      mobileNumber,
-      city,
-      address,
-      pincode,
-    };
-    setCustomers([...customers, newCustomer]);
-
-    // Clear form fields after submission
-    clearForm();
+  const handleConfirmation = async () => {
+    try {
+      const response = await client.post("/api/Customer/addnewCustomer", {
+        customerName,
+        mobileNumber,
+        city,
+        address,
+        pincode,
+      });
+      console.log(response.data);
+      Alert.alert("Success", "Customer added successfully");
+      clearForm();
+      
+      // Fetch updated list of customers after adding the new customer
+      fetchCustomerData();
+    } catch (error) {
+      console.error(error);
+      Alert.alert(
+        "Error",
+        "Failed to add customer. Please try again later."
+      );
+    }
   };
-
-  const handleClearForm = () => {
-    // Clear form fields
-    clearForm();
-  };
+  
+  
+  
 
   const clearForm = () => {
-    setFullname("");
+    setCustomerName("");
     setMobileNumber("");
     setCity("");
     setAddress("");
@@ -78,9 +85,9 @@ const AddCustomerPage = () => {
       <Text style={styles.heading}>Add New Customer</Text>
       <TextInput
         style={styles.input}
-        placeholder="Fullname"
-        value={fullname}
-        onChangeText={setFullname}
+        placeholder="Customer Name"
+        value={customerName}
+        onChangeText={setCustomerName}
       />
       <TextInput
         style={styles.input}
@@ -89,7 +96,7 @@ const AddCustomerPage = () => {
         onChangeText={setMobileNumber}
         keyboardType="numeric"
         maxLength={10}
-      />  
+      />
       <TextInput
         style={styles.input}
         placeholder="City"
@@ -112,7 +119,7 @@ const AddCustomerPage = () => {
       />
       <View style={styles.buttonContainer}>
         <Button title="Add Customer" onPress={handleAddCustomer} />
-        <Button title="Clear Form" onPress={handleClearForm} />
+        <Button title="Clear Form" onPress={clearForm} />
       </View>
     </ScrollView>
   );
@@ -140,13 +147,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     marginBottom: 20,
-  },
-  customerContainer: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
   },
 });
 
