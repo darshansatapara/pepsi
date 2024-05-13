@@ -17,6 +17,7 @@ import CalendarPicker from "react-native-calendar-picker";
 import client from "../axios";
 
 const availableProducts = ["Red Pepsi", "Black Pepsi", "Yellow Pepsi"];
+// const productPrices = { "Red Pepsi": 10, "Black Pepsi": 15, "Yellow Pepsi": 20 };
 
 const OrderPage = ({ navigation }) => {
   const [ordersDetails, setOrdersDetails] = useState([]);
@@ -29,18 +30,32 @@ const OrderPage = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
   const [filterApplied, setFilterApplied] = useState(false);
+  const [totalAmount, setTotalAmount] = useState({
+    totalAmount: 0,
+  });
 
   useEffect(() => {
-    fatchOrdersData();
+    fetchOrdersData();
   }, []);
 
-  const fatchOrdersData = async () => {
+  /// fathc the all orders data
+  const fetchOrdersData = async () => {
     try {
       const response = await client.get("/api/Order/getAllOrders");
-      setOrdersDetails(response.data);
-      console.log(response.data);
+      if (response && response.data && Array.isArray(response.data)) {
+        const transformedOrders = response.data.map((order) => ({
+          ...order,
+          orderDetails: [
+            { product: "Red Pepsi", quantity: order.redPepsiQuantity },
+            { product: "Black Pepsi", quantity: order.blackPepsiQuantity },
+            { product: "Yellow Pepsi", quantity: order.yellowPepsiQuantity },
+          ],
+        }));
+        setOrdersDetails(transformedOrders);
+      } else {
+        console.error("Invalid response data:", response);
+      }
     } catch (error) {
-      console.error(error);
       console.error("Error finding the Order Data ", error);
     }
   };
@@ -54,54 +69,30 @@ const OrderPage = ({ navigation }) => {
   }, [searchText, selectedDate]);
 
   const handleAddNewOrder = () => {
-    navigation.navigate("AddNewOrder");
+    navigation.navigate("AddNewOrder", { fetchOrdersData: fetchOrdersData });
   };
 
-  // const handleEditButtonPress = (order) => {
-  //   setSelectedOrder(order);
-  //   const quantities = {};
-  //   if (order.orderDetails && Array.isArray(order.orderDetails)) {
-  //     order.orderDetails.forEach((detail) => {
-  //       if (detail.product && detail.quantity) {
-  //         quantities[detail.product] = detail.quantity.toString();
-  //       }
-  //     });
-  //   }
-  //   setEditedQuantities(quantities);
-  //   setEditedPaymentStatus(order.paymentStatus);
+  const handleEditButtonPress = (order) => {
+    setSelectedOrder(order);
 
-  //   const orderedProducts = order.orderDetails
-  //     ? order.orderDetails.map((detail) => detail.product)
-  //     : [];
-  //   const otherProducts = availableProducts.filter(
-  //     (product) => !orderedProducts.includes(product)
-  //   );
-  //   setAvailableOtherProducts(otherProducts);
+    // Initialize editedQuantities object with product quantities
+    const editedQuantities = {
+      "Red Pepsi": order.redPepsiQuantity.toString(),
+      "Black Pepsi": order.blackPepsiQuantity.toString(),
+      "Yellow Pepsi": order.yellowPepsiQuantity.toString(),
+    };
 
-  //   setEditModalVisible(true);
-  // };
+    setEditedQuantities(editedQuantities);
+    setEditedPaymentStatus(order.paymentStatus);
 
-  const handleSaveEdit = () => {
-    const updatedOrders = ordersDetails.map((order) => {
-      if (order.id === selectedOrder.id) {
-        const updatedOrderDetails = Object.keys(editedQuantities).map(
-          (product) => {
-            return {
-              product,
-              quantity: parseInt(editedQuantities[product]) || 0,
-            };
-          }
-        );
-        return {
-          ...order,
-          orderDetails: updatedOrderDetails,
-          paymentStatus: editedPaymentStatus,
-        };
-      }
-      return order;
-    });
-    setOrdersDetails(updatedOrders);
-    setEditModalVisible(false);
+    // Remove ordered products from available products list
+    const orderedProducts = Object.keys(editedQuantities);
+    const otherProducts = availableProducts.filter(
+      (product) => !orderedProducts.includes(product)
+    );
+    setAvailableOtherProducts(otherProducts);
+
+    setEditModalVisible(true);
   };
 
   const handleAddOtherProduct = (product) => {
@@ -116,20 +107,140 @@ const OrderPage = ({ navigation }) => {
     );
   };
 
-  const handleDeleteOrder = (orderId) => {
-    const updatedOrders = ordersDetails.filter((order) => order.id !== orderId);
-    setOrdersDetails(updatedOrders);
+  const calculateUpdatedTotalamount = async () => {
+    try {
+      // Calculate total amount based on edited quantities
+      const response = await client.post("/api/Order/calculateTotalAmount", {
+        redPepsiQuantity: parseInt(editedQuantities["Red Pepsi"]) || 0,
+        blackPepsiQuantity: parseInt(editedQuantities["Black Pepsi"]) || 0,
+        yellowPepsiQuantity: parseInt(editedQuantities["Yellow Pepsi"]) || 0,
+      });
+      setTotalAmount((prev) => ({
+        ...prev,
+        totalAmount: response.data.totalAmount,
+      }));
+      console.log(totalAmount.totalAmount);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    calculateUpdatedTotalamount();
+  }, [editedQuantities]);
+  const handleSaveEdit = async () => {
+    try {
+      const isModified =
+        editedPaymentStatus !== selectedOrder.paymentStatus ||
+        Object.keys(editedQuantities).some(
+          (product) =>
+            parseInt(editedQuantities[product]) !==
+            selectedOrder[`${product.toLowerCase().replace(" ", "")}Quantity`]
+        );
+
+      let updatedOrderDetails = {};
+
+      if (isModified) {
+        updatedOrderDetails = {
+          redPepsiQuantity: parseInt(editedQuantities["Red Pepsi"]) || 0,
+          blackPepsiQuantity: parseInt(editedQuantities["Black Pepsi"]) || 0,
+          yellowPepsiQuantity: parseInt(editedQuantities["Yellow Pepsi"]) || 0,
+          paymentStatus: editedPaymentStatus,
+          totalAmount: totalAmount.totalAmount,
+        };
+        console.log(totalAmount);
+      } else {
+        updatedOrderDetails = {
+          redPepsiQuantity: selectedOrder.redPepsiQuantity,
+          blackPepsiQuantity: selectedOrder.blackPepsiQuantity,
+          yellowPepsiQuantity: selectedOrder.yellowPepsiQuantity,
+          paymentStatus: selectedOrder.paymentStatus,
+          totalAmount: selectedOrder.totalAmount, // Retain the existing total amount
+        };
+      }
+
+      const orderId = selectedOrder.orderID; // Extract orderID
+      const _id = selectedOrder._id; // Extract _id (assuming _id is present in selectedOrder)
+
+      // Pass both orderId and _id to the backend API
+      const response = await client.put(
+        `/api/Order/updateOrder/${orderId}/${_id}`, // Modify the API endpoint URL
+        updatedOrderDetails
+      );
+
+      // Here, response.data contains the updated order details from the server
+
+      const updatedOrders = ordersDetails.map((order) => {
+        if (order.orderID === selectedOrder.orderID) {
+          return {
+            ...order,
+            redPepsiQuantity: response.redPepsiQuantity,
+            blackPepsiQuantity: response.blackPepsiQuantity,
+            yellowPepsiQuantity: response.yellowPepsiQuantity,
+            paymentStatus: response.paymentStatus,
+            totalAmount: response.totalAmount, // Update the total amount
+          };
+        }
+        console.log("totalammount", response.totalAmount);
+        return order;
+      });
+
+      setOrdersDetails(updatedOrders);
+      setEditModalVisible(false);
+      fetchOrdersData(); // <-- This line seems redundant, as you're already updating ordersDetails state
+    } catch (error) {
+      console.error("Error updating order:", error);
+      // Handle error
+    }
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    try {
+      // Display confirmation dialog
+      Alert.alert(
+        "Confirm Deletion",
+        "Are you sure you want to delete this order?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Delete",
+            onPress: async () => {
+              try {
+                // Make DELETE request to delete the order
+                await client.delete(`/api/Order/deleteOrder/${orderId}`);
+                const updatedOrders = ordersDetails.filter(
+                  (order) => order.id !== orderId
+                );
+                setOrdersDetails(updatedOrders);
+                fetchOrdersData();
+              } catch (error) {
+                console.error("Error deleting order:", error);
+                // Handle error
+              }
+            },
+            style: "destructive",
+          },
+        ]
+      );
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      // Handle error
+    }
   };
 
   const renderOrderItem = ({ item }) => (
     <>
-      <View style={styles.orderCard}>
+      <View style={styles.orderCard} key={ordersDetails.orderID}>
         <TouchableOpacity
           style={styles.deleteButton}
           onPress={() => handleDeleteOrder(item.orderID)}
         >
           <Feather name="trash" size={24} color="red" />
         </TouchableOpacity>
+        <Text style={styles.customerInfo}>Order ID: {item.orderID}</Text>
         <Text style={styles.customerInfo}>Customer ID: {item.customerID}</Text>
         <Text style={styles.customerInfo}>
           Customer Name: {item.customerName}
@@ -139,12 +250,23 @@ const OrderPage = ({ navigation }) => {
             <Text style={styles.tableHeader}>Product</Text>
             <Text style={styles.tableHeader}>Quantity</Text>
           </View>
-          {item.orderDetails.map((order, index) => (
-            <View key={index} style={styles.tableRow}>
-              <Text style={styles.tableCell}>{order.product}</Text>
-              <Text style={styles.tableCell}>{order.quantity}</Text>
-            </View>
-          ))}
+          {item.orderDetails && item.orderDetails.length > 0 ? (
+            item.orderDetails.map((order, index) => (
+              <View key={index} style={styles.tableRow}>
+                <Text style={styles.tableCell}>{order.product}</Text>
+                <TextInput
+                  style={styles.tableCell}
+                  value={order.quantity.toString()}
+                  onChangeText={(text) =>
+                    handleProductQuantityChange(order.product, text)
+                  }
+                  keyboardType="numeric"
+                />
+              </View>
+            ))
+          ) : (
+            <Text>No order details available</Text>
+          )}
         </View>
         <TouchableOpacity
           style={styles.editButton}
@@ -158,7 +280,7 @@ const OrderPage = ({ navigation }) => {
         <Text style={styles.orderInfo}>
           Payment Amount: ₹{item.totalAmount}
         </Text>
-        <Text style={styles.orderInfo}>Date: {item.date}</Text>
+        <Text style={styles.orderInfo}>Date: {item.orderDate}</Text>
       </View>
     </>
   );
@@ -271,6 +393,11 @@ const OrderPage = ({ navigation }) => {
                 <Picker.Item label="Paid" value="Paid" />
                 <Picker.Item label="Pending" value="Pending" />
               </Picker>
+            </View>
+            <View style={styles.inputRow}>
+              <Text style={styles.productName}>
+                Total Amount: {totalAmount.totalAmount}
+              </Text>
             </View>
             <View style={styles.buttonRow}>
               <Button title="Save" onPress={handleSaveEdit} />
@@ -479,9 +606,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     elevation: 5,
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  totalAmountContainer: {
+    alignItems: "center",
+    marginTop: 10,
+  },
+  totalAmountText: {
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
 

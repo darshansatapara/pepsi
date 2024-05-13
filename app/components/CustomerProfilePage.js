@@ -4,20 +4,21 @@ import client from "../axios"; // Import Axios for making API requests
 
 const OrderCard = ({ order }) => (
   <View style={styles.orderCard}>
-    <Text>Order ID: {order.orderId}</Text>
-    <Text>Date: {order.date}</Text>
-    <Text>Products:</Text>
-    {order.products.map((product) => (
-      <Text key={product.name}>
-        - {product.name}: {product.quantity}
-      </Text>
-    ))}
+    <Text>Order ID: {order.orderID}</Text>
+    <Text>Order Date: {order.orderDate}</Text>
+    <Text>---------------------------</Text>
+    <Text>.....Produts:....</Text>
+    <Text>Red Pepsi: {order.redPepsiQuantity}</Text>
+    <Text>Black Pepsi: {order.blackPepsiQuantity}</Text>
+    <Text>Yellow Pepsi: {order.yellowPepsiQuantity}</Text>
+    <Text>---------------------------</Text>
     <Text>Total Amount: ${order.totalAmount}</Text>
+    <Text>Payment Status: {order.paymentStatus}</Text>
   </View>
 );
 
 const CustomerProfile = ({ route }) => {
-  const { customerId } = route.params;
+  const customerID = route.params.customerID;
   const [customer, setCustomer] = useState(null);
   const [orders, setOrders] = useState([]);
   useEffect(() => {
@@ -28,15 +29,20 @@ const CustomerProfile = ({ route }) => {
     try {
       // Fetch customer details based on customer ID
       const customerResponse = await client.get(
-        `/api/Customer/getCustomer/${customerId}`
+        `/api/Customer/getCustomer/${customerID}`
       );
       setCustomer(customerResponse.data);
 
       // Fetch orders for the customer
+      console.log(customerID);
       const orderResponse = await client.get(
-        `/api/Order/bycustomerid/${customerId}`
+        `/api/Order/bycustomerid/${customerID}`
       );
-      setOrders(orderResponse.data);
+      setOrders(
+        Array.isArray(orderResponse.data)
+          ? orderResponse.data
+          : [orderResponse.data]
+      );
     } catch (error) {
       console.log(error.message);
       console.error("Error fetching customer data:", error);
@@ -45,15 +51,15 @@ const CustomerProfile = ({ route }) => {
 
   return customer ? (
     <>
-      <View style={styles.customerDetails}>
-        <Text style={styles.heading}>Customer Details</Text>
-        <Text>Name: {customer.customerName}</Text>
-        <Text>Mobile Number: {customer.mobileNumber}</Text>
-        <Text>City: {customer.city}</Text>
-        <Text>Address: {customer.address}</Text>
-        <Text>Pincode: {customer.pincode}</Text>
-      </View>
       <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.customerDetails}>
+          <Text style={styles.heading}>Customer Details</Text>
+          <Text>Name: {customer.customerName}</Text>
+          <Text>Mobile Number: {customer.mobileNumber}</Text>
+          <Text>City: {customer.city}</Text>
+          <Text>Address: {customer.address}</Text>
+          <Text>Pincode: {customer.pincode}</Text>
+        </View>
         <View style={styles.orderDetails}>
           <Text style={styles.heading}>Ordered Details</Text>
           {orders.length === 0 ? (
@@ -61,7 +67,7 @@ const CustomerProfile = ({ route }) => {
           ) : (
             <FlatList
               data={orders}
-              keyExtractor={(item) => item.orderId.toString()}
+              keyExtractor={(item) => item.orderID}
               renderItem={({ item }) => <OrderCard order={item} />}
               horizontal
             />

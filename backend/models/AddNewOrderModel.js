@@ -6,7 +6,7 @@ const OrderSchema = new mongoose.Schema({
   mobileNumber: { type: Number, required: true },
   customerID: { type: Number, required: true },
   customerName: { type: String, required: true },
-  orderDate: { type: Date, required: true },
+  orderDate: { type: String, required: true },
   redPepsiQuantity: { type: Number, default: 0 },
   blackPepsiQuantity: { type: Number, default: 0 },
   yellowPepsiQuantity: { type: Number, default: 0 },

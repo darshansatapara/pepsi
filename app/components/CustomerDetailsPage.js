@@ -61,7 +61,8 @@ const CustomerDetailsPage = ({ navigation }) => {
   
 
   const handleCustomerPress = (customer) => {
-    navigation.navigate("CustomerProfile", { customerId: customer.customerID });
+    // console.log("customer id", customer.customerID);
+    navigation.navigate("CustomerProfile", { customerID: customer.customerID });
   };
 
   return (

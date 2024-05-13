@@ -12,7 +12,8 @@ import {
 } from "react-native";
 import client from "../axios";
 
-const AddNewOrderPage = ({ navigation }) => {
+const AddNewOrderPage = ({ navigation, route }) => {
+  const { fetchOrdersData } = route.params;
   const [customerDetails, setCustomerDetails] = useState({
     customerID: "",
     customerName: "",
@@ -22,10 +23,13 @@ const AddNewOrderPage = ({ navigation }) => {
     black: 0,
     yellow: 0,
   });
-  const [totalAmount, setTotalAmount] = useState(0);
+  const [totalAmount, setTotalAmount] = useState({
+    totalAmount: 0,
+  });
   const [mobileNumber, setMobileNumber] = useState("");
   const [confirmationShown, setConfirmationShown] = useState(false);
   const [currentDate, setCurrentDate] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("pending");
 
   useEffect(() => {
     const date = new Date();
@@ -61,24 +65,29 @@ const AddNewOrderPage = ({ navigation }) => {
     }
   };
 
-  const handleProductQuantityChange = (product, quantity) => {
+  const handleProductQuantityChange = async (product, quantity) => {
     setOrderDetails({
       ...orderDetails,
       [product]: parseInt(quantity) || 0,
     });
-  };
+    try {
+      const response = await client.post("/api/Order/calculateTotalAmount", {
+        redPepsiQuantity:
+          product === "red" ? parseInt(quantity) : orderDetails.red,
+        blackPepsiQuantity:
+          product === "black" ? parseInt(quantity) : orderDetails.black,
+        yellowPepsiQuantity:
+          product === "yellow" ? parseInt(quantity) : orderDetails.yellow,
+      });
 
-  useEffect(() => {
-    calculateTotalAmount();
-  }, [orderDetails]);
-
-  const calculateTotalAmount = () => {
-    const { red, black, yellow } = orderDetails;
-    const redPrice = 10;
-    const blackPrice = 15;
-    const yellowPrice = 20;
-    const total = red * redPrice + black * blackPrice + yellow * yellowPrice;
-    setTotalAmount(total);
+      setTotalAmount((prev) => ({
+        ...prev,
+        totalAmount: response.data.totalAmount,
+      }));
+    } catch (error) {
+      console.error("Error calculating total amount:", error);
+      Alert.alert("Error", "Failed to calculate total amount");
+    }
   };
 
   //handle confirmation for the sen the valuse of the order
@@ -89,7 +98,7 @@ const AddNewOrderPage = ({ navigation }) => {
       orderDetails.black
     }\nYellow Pepsi: ${
       orderDetails.yellow
-    }\n\nTotal Amount: ₹${totalAmount}\n\nDate: ${currentDate}`;
+    }\n\nTotal Amount: ₹${totalAmount.totalAmount}\n\nDate: ${currentDate}`;
 
     Alert.alert(
       "Confirm Order",
@@ -111,8 +120,8 @@ const AddNewOrderPage = ({ navigation }) => {
                 redPepsiQuantity: orderDetails.red,
                 blackPepsiQuantity: orderDetails.black,
                 yellowPepsiQuantity: orderDetails.yellow,
-                totalAmount,
-                paymentStatus: orderDetails.paymentStatus
+                totalAmount: totalAmount.totalAmount,
+                paymentStatus,
               });
               console.log("Order placed successfully:", response.data);
               Alert.alert(
@@ -125,7 +134,7 @@ const AddNewOrderPage = ({ navigation }) => {
                       setMobileNumber("");
                       setCustomerDetails({ customerID: "", customerName: "" });
                       setOrderDetails({ red: 0, black: 0, yellow: 0 });
-                      setTotalAmount(0);
+                      fetchOrdersData();
                       navigation.goBack();
                     },
                   },
@@ -150,7 +159,6 @@ const AddNewOrderPage = ({ navigation }) => {
     setMobileNumber("");
     setCustomerDetails({ customerID: "", customerName: "" });
     setOrderDetails({ red: 0, black: 0, yellow: 0 });
-    setTotalAmount(0);
     setConfirmationShown(false);
   };
 
@@ -219,22 +227,23 @@ const AddNewOrderPage = ({ navigation }) => {
         <Picker
           style={styles.input}
           selectedValue={orderDetails.paymentStatus}
-          onValueChange={(itemValue, itemIndex) =>
-            setOrderDetails({ ...orderDetails, paymentStatus: itemValue })
-          }
+          onValueChange={(itemValue, itemIndex) => setPaymentStatus(itemValue)}
+          enabled={true} // Set this to false to make the picker read-only
         >
           <Picker.Item label="Pending" value="pending" />
           <Picker.Item label="Paid" value="paid" />
         </Picker>
       </View>
 
-      <Text style={styles.totalAmount}>Total Amount: ₹{totalAmount}</Text>
+      <Text style={styles.totalAmount}>
+        Total Amount: ₹{totalAmount.totalAmount}
+      </Text>
       <View style={styles.buttonRow}>
         <Button title="Clear Form" onPress={clearForm} />
         <Button
           title="Confirm Order"
           onPress={handleConfirmOrder}
-          disabled={!totalAmount}
+          disabled={!totalAmount.totalAmount}
         />
       </View>
     </View>
