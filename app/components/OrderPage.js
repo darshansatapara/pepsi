@@ -257,12 +257,14 @@ const OrderPage = ({ navigation }) => {
           {/* Right side: TouchableOpacity elements */}
           <View style={styles.rightContainer}>
             {/* Delete Button */}
-            <TouchableOpacity
-              style={styles.deleteButtonContainer}
-              onPress={() => handleDeleteOrder(item.orderID)}
-            >
-              <MaterialIcons name="delete" size={28} color="black" />
-            </TouchableOpacity>
+            {daysDifference <= 7 && (
+              <TouchableOpacity
+                style={styles.deleteButtonContainer}
+                onPress={() => handleDeleteOrder(item.orderID)}
+              >
+                <MaterialIcons name="delete" size={28} color="black" />
+              </TouchableOpacity>
+            )}
             {/* Edit Button */}
             {daysDifference <= 7 && (
               <TouchableOpacity
