@@ -15,6 +15,7 @@ import { Feather } from "@expo/vector-icons";
 import moment from "moment";
 import CalendarPicker from "react-native-calendar-picker";
 import client from "../axios";
+import { differenceInDays, parse } from "date-fns";
 
 const availableProducts = ["Red Pepsi", "Black Pepsi", "Yellow Pepsi"];
 // const productPrices = { "Red Pepsi": 10, "Black Pepsi": 15, "Yellow Pepsi": 20 };
@@ -231,59 +232,77 @@ const OrderPage = ({ navigation }) => {
     }
   };
 
-  const renderOrderItem = ({ item }) => (
-    <>
-      <View style={styles.orderCard} key={ordersDetails.orderID}>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDeleteOrder(item.orderID)}
-        >
-          <Feather name="trash" size={24} color="red" />
-        </TouchableOpacity>
-        <Text style={styles.customerInfo}>Order ID: {item.orderID}</Text>
-        <Text style={styles.customerInfo}>Customer ID: {item.customerID}</Text>
-        <Text style={styles.customerInfo}>
-          Customer Name: {item.customerName}
-        </Text>
-        <View style={styles.table}>
-          <View style={styles.tableHeaderRow}>
-            <Text style={styles.tableHeader}>Product</Text>
-            <Text style={styles.tableHeader}>Quantity</Text>
+  const renderOrderItem = ({ item }) => {
+    const orderDateParts = item.orderDate.split("-");
+    const orderDate = parse(
+      `${orderDateParts[2]}-${orderDateParts[1]}-${orderDateParts[0]}`,
+      "yyyy-MM-dd",
+      new Date()
+    );
+
+    // Calculate the difference in days between the order date and the current date
+    const currentDate = new Date();
+    const daysDifference = differenceInDays(currentDate, orderDate);
+    return (
+      <>
+        <View style={styles.orderCard} key={item.orderID}>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => handleDeleteOrder(item.orderID)}
+          >
+            <Feather name="trash" size={24} color="red" />
+          </TouchableOpacity>
+          <Text style={styles.customerInfo}>Order ID: {item.orderID}</Text>
+          <Text style={styles.customerInfo}>
+            Customer ID: {item.customerID}
+          </Text>
+          <Text style={styles.customerInfo}>
+            Customer Name: {item.customerName}
+          </Text>
+          <View style={styles.table}>
+            <View style={styles.tableHeaderRow}>
+              <Text style={styles.tableHeader}>Product</Text>
+              <Text style={styles.tableHeader}>Quantity</Text>
+            </View>
+            {item.orderDetails && item.orderDetails.length > 0 ? (
+              item.orderDetails.map((order, index) => (
+                <View key={index} style={styles.tableRow}>
+                  <Text style={styles.tableCell}>{order.product}</Text>
+                  <TextInput
+                    style={styles.tableCell}
+                    value={order.quantity.toString()}
+                    onChangeText={(text) =>
+                      handleProductQuantityChange(order.product, text)
+                    }
+                    keyboardType="numeric"
+                  />
+                </View>
+              ))
+            ) : (
+              <Text>No order details available</Text>
+            )}
           </View>
-          {item.orderDetails && item.orderDetails.length > 0 ? (
-            item.orderDetails.map((order, index) => (
-              <View key={index} style={styles.tableRow}>
-                <Text style={styles.tableCell}>{order.product}</Text>
-                <TextInput
-                  style={styles.tableCell}
-                  value={order.quantity.toString()}
-                  onChangeText={(text) =>
-                    handleProductQuantityChange(order.product, text)
-                  }
-                  keyboardType="numeric"
-                />
-              </View>
-            ))
-          ) : (
-            <Text>No order details available</Text>
+
+          {/* handel edit Button based on order date is less or greater then 7 days */}
+          {daysDifference <= 7 && (
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => handleEditButtonPress(item)}
+            >
+              <Text style={styles.editButtonText}>Edit</Text>
+            </TouchableOpacity>
           )}
+          <Text style={styles.orderInfo}>
+            Payment Status: {item.paymentStatus}
+          </Text>
+          <Text style={styles.orderInfo}>
+            Payment Amount: ₹{item.totalAmount}
+          </Text>
+          <Text style={styles.orderInfo}>Date: {item.orderDate}</Text>
         </View>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => handleEditButtonPress(item)}
-        >
-          <Text style={styles.editButtonText}>Edit</Text>
-        </TouchableOpacity>
-        <Text style={styles.orderInfo}>
-          Payment Status: {item.paymentStatus}
-        </Text>
-        <Text style={styles.orderInfo}>
-          Payment Amount: ₹{item.totalAmount}
-        </Text>
-        <Text style={styles.orderInfo}>Date: {item.orderDate}</Text>
-      </View>
-    </>
-  );
+      </>
+    );
+  };
 
   const filteredOrders = ordersDetails.filter(
     (order) =>

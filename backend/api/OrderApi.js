@@ -98,7 +98,6 @@ router.get("/byCustomerId/:customerID", async (req, res) => {
   }
 });
 
-
 // Route to update order details
 router.put("/updateOrder/:orderId/:_id", async (req, res) => {
   console.log("request to update order");
@@ -183,4 +182,20 @@ router.post("/calculateTotalAmount", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 module.exports = router;
+
+// // Message formate
+// const orderDetailsMessage = `🎉 Thank you for your order! 🎉\n\nOrder ID: ${
+//   orderDetails.orderID
+// }\nCustomer ID: ${customerDetails.customerID.toString()}\nCustomer Name: ${
+//   customerDetails.customerName
+// }\nOrder Date: ${
+//   orderDetails.orderDate
+// }\n\nOrder Details:\nRed Pepsi: ${
+//   orderDetails.red
+// }\nBlack Pepsi: ${orderDetails.black}\nYellow Pepsi: ${
+//   orderDetails.yellow
+// }\n\nTotal Amount: ₹${
+//   totalAmount.totalAmount
+// }\nPayment Status: ${paymentStatus}`;

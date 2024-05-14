@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Picker } from "@react-native-picker/picker";
+import SendIntentAndroid from "react-native-send-intent";
 import {
   View,
   Text,
@@ -96,9 +97,9 @@ const AddNewOrderPage = ({ navigation, route }) => {
       customerDetails.customerName
     }\n\nOrder Details:\nRed Pepsi: ${orderDetails.red}\nBlack Pepsi: ${
       orderDetails.black
-    }\nYellow Pepsi: ${
-      orderDetails.yellow
-    }\n\nTotal Amount: ₹${totalAmount.totalAmount}\n\nDate: ${currentDate}`;
+    }\nYellow Pepsi: ${orderDetails.yellow}\n\nTotal Amount: ₹${
+      totalAmount.totalAmount
+    }\n\nDate: ${currentDate}`;
 
     Alert.alert(
       "Confirm Order",
@@ -124,6 +125,8 @@ const AddNewOrderPage = ({ navigation, route }) => {
                 paymentStatus,
               });
               console.log("Order placed successfully:", response.data);
+
+
               Alert.alert(
                 "Success",
                 "Order placed successfully!",
