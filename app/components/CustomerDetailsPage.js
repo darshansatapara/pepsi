@@ -26,10 +26,10 @@ const CustomerDetailsPage = ({ navigation }) => {
   const [filteredCustomers, setFilteredCustomers] = useState([]);
 
   useEffect(() => {
-    fetchCustomerData();
+    fatchCustomerData();
   }, []); // Fetch customer data when the component mounts
 
-  const fetchCustomerData = async () => {
+  const fatchCustomerData = async () => {
     try {
       const response = await client.get("/api/Customer/allcustomers");
       setCustomers(response.data);
@@ -55,14 +55,16 @@ const CustomerDetailsPage = ({ navigation }) => {
 
   const handleAddCustomer = () => {
     navigation.navigate("AddCustomer", {
-      fetchCustomerData: fetchCustomerData,
+      fatchCustomerData: fatchCustomerData,
     });
   };
-  
 
   const handleCustomerPress = (customer) => {
     // console.log("customer id", customer.customerID);
-    navigation.navigate("CustomerProfile", { customerID: customer.customerID });
+    navigation.navigate("CustomerProfile", {
+      customerID: customer.customerID,
+      fatchCustomerData: fatchCustomerData,
+    });
   };
 
   return (

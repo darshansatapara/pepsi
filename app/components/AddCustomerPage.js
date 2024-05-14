@@ -11,7 +11,7 @@ import {
 import client from "../axios";
 
 const AddCustomerPage = ({ route }) => {
-  const { fetchCustomerData } = route.params;
+  const fatchCustomerData = route.params.fatchCustomerData;
   const [customerName, setCustomerName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [city, setCity] = useState("");
@@ -57,20 +57,14 @@ const AddCustomerPage = ({ route }) => {
       console.log(response.data);
       Alert.alert("Success", "Customer added successfully");
       clearForm();
-      
+
       // Fetch updated list of customers after adding the new customer
-      fetchCustomerData();
+      fatchCustomerData();
     } catch (error) {
       console.error(error);
-      Alert.alert(
-        "Error",
-        "Failed to add customer. Please try again later."
-      );
+      Alert.alert("Error", "Failed to add customer. Please try again later.");
     }
   };
-  
-  
-  
 
   const clearForm = () => {
     setCustomerName("");

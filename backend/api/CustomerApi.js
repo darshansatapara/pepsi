@@ -48,6 +48,42 @@ router.post("/addnewCustomer", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+//update the customer
+router.put("/updateCustomer/:customerID/:_id", async (req, res) => {
+  const _id = req.params._id;
+  const customerID = req.params.customerID;
+  const { customerName, mobileNumber, city, address, pincode } = req.body;
+
+  try {
+    // Find the customer by ID
+    const customer = await Customer.findOneAndUpdate(
+      {
+        _id,
+        customerID: customerID,
+      },
+      {
+        // Update customer data
+        customerName,
+        mobileNumber,
+        city,
+        address,  
+        pincode,
+      },
+      { new: true }
+    );
+
+    if (!customer) {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+
+    // Save the updated customer data
+
+    res.json({ message: "Customer data updated successfully", customer });
+  } catch (error) {
+    console.error("Error updating customer data:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 //get all customers to show in CustomerDetailPage
 router.get("/allcustomers", async (req, res) => {

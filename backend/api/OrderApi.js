@@ -100,7 +100,6 @@ router.get("/byCustomerId/:customerID", async (req, res) => {
 
 // Route to update order details
 router.put("/updateOrder/:orderId/:_id", async (req, res) => {
-  console.log("request to update order");
   const orderId = req.params.orderId;
   const _id = req.params._id; // Assuming _id is the MongoDB ObjectId
 
@@ -138,6 +137,33 @@ router.put("/updateOrder/:orderId/:_id", async (req, res) => {
   }
 });
 
+router.put("/updateCustomerDetailsInOrder/:customerID", async (req, res) => {
+  try {
+    const customerID = req.params.customerID;
+    const editingCustomer = req.body;
+
+    // Update orders where customerID matches
+    await Order.updateMany(
+      { customerID: customerID },
+      {
+        $set: {
+          customerName: editingCustomer.customerName,
+          mobileNumber: editingCustomer.mobileNumber,
+          city: editingCustomer.city,
+          address: editingCustomer.address,
+          pincode: editingCustomer.pincode,
+        }
+      }
+    );
+
+    res.status(200).json({ message: "Customer details updated in orders successfully" });
+  } catch (error) {
+    console.error("Error updating customer details in orders:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+
+
+});
 //Delete order
 router.delete("/deleteOrder/:orderID", async (req, res) => {
   const orderID = req.params.orderID;

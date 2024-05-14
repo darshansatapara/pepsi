@@ -11,15 +11,13 @@ import {
   Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { Feather } from "@expo/vector-icons";
+import { Feather, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import moment from "moment";
 import CalendarPicker from "react-native-calendar-picker";
 import client from "../axios";
 import { differenceInDays, parse } from "date-fns";
 
 const availableProducts = ["Red Pepsi", "Black Pepsi", "Yellow Pepsi"];
-// const productPrices = { "Red Pepsi": 10, "Black Pepsi": 15, "Yellow Pepsi": 20 };
-
 const OrderPage = ({ navigation }) => {
   const [ordersDetails, setOrdersDetails] = useState([]);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -36,11 +34,14 @@ const OrderPage = ({ navigation }) => {
   });
 
   useEffect(() => {
-    fetchOrdersData();
+    const fetchData = async () => {
+      await fatchOrdersData();
+    };
+    fetchData();
   }, []);
 
   /// fathc the all orders data
-  const fetchOrdersData = async () => {
+  const fatchOrdersData = async () => {
     try {
       const response = await client.get("/api/Order/getAllOrders");
       if (response && response.data && Array.isArray(response.data)) {
@@ -70,7 +71,7 @@ const OrderPage = ({ navigation }) => {
   }, [searchText, selectedDate]);
 
   const handleAddNewOrder = () => {
-    navigation.navigate("AddNewOrder", { fetchOrdersData: fetchOrdersData });
+    navigation.navigate("AddNewOrder", { fatchOrdersData: fatchOrdersData });
   };
 
   const handleEditButtonPress = (order) => {
@@ -120,7 +121,7 @@ const OrderPage = ({ navigation }) => {
         ...prev,
         totalAmount: response.data.totalAmount,
       }));
-      console.log(totalAmount.totalAmount);
+      // console.log(totalAmount.totalAmount);
     } catch (e) {
       console.error(e);
     }
@@ -188,7 +189,7 @@ const OrderPage = ({ navigation }) => {
 
       setOrdersDetails(updatedOrders);
       setEditModalVisible(false);
-      fetchOrdersData(); // <-- This line seems redundant, as you're already updating ordersDetails state
+      fatchOrdersData(); // <-- This line seems redundant, as you're already updating ordersDetails state
     } catch (error) {
       console.error("Error updating order:", error);
       // Handle error
@@ -212,11 +213,7 @@ const OrderPage = ({ navigation }) => {
               try {
                 // Make DELETE request to delete the order
                 await client.delete(`/api/Order/deleteOrder/${orderId}`);
-                const updatedOrders = ordersDetails.filter(
-                  (order) => order.id !== orderId
-                );
-                setOrdersDetails(updatedOrders);
-                fetchOrdersData();
+                fatchOrdersData();
               } catch (error) {
                 console.error("Error deleting order:", error);
                 // Handle error
@@ -244,70 +241,81 @@ const OrderPage = ({ navigation }) => {
     const currentDate = new Date();
     const daysDifference = differenceInDays(currentDate, orderDate);
     return (
-      <>
-        <View style={styles.orderCard} key={item.orderID}>
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => handleDeleteOrder(item.orderID)}
-          >
-            <Feather name="trash" size={24} color="red" />
-          </TouchableOpacity>
-          <Text style={styles.customerInfo}>Order ID: {item.orderID}</Text>
-          <Text style={styles.customerInfo}>
-            Customer ID: {item.customerID}
-          </Text>
-          <Text style={styles.customerInfo}>
-            Customer Name: {item.customerName}
-          </Text>
-          <View style={styles.table}>
-            <View style={styles.tableHeaderRow}>
-              <Text style={styles.tableHeader}>Product</Text>
-              <Text style={styles.tableHeader}>Quantity</Text>
+      <View style={styles.orderCard} key={item.orderID}>
+        <View style={styles.editAndDeletebuttonContainer}>
+          {/* Left side: Text elements */}
+          <View style={styles.leftContainer}>
+            <Text style={styles.customerInfo}>Order ID: {item.orderID}</Text>
+            <Text style={styles.customerInfo}>
+              Customer ID: {item.customerID}
+            </Text>
+            <View style={styles.customerName}>
+              <Text style={styles.customerInfo}>Customer Name:</Text>
+              <Text style={styles.customerInfo}>{item.customerName}</Text>
             </View>
-            {item.orderDetails && item.orderDetails.length > 0 ? (
-              item.orderDetails.map((order, index) => (
-                <View key={index} style={styles.tableRow}>
-                  <Text style={styles.tableCell}>{order.product}</Text>
-                  <TextInput
-                    style={styles.tableCell}
-                    value={order.quantity.toString()}
-                    onChangeText={(text) =>
-                      handleProductQuantityChange(order.product, text)
-                    }
-                    keyboardType="numeric"
-                  />
-                </View>
-              ))
-            ) : (
-              <Text>No order details available</Text>
+          </View>
+          {/* Right side: TouchableOpacity elements */}
+          <View style={styles.rightContainer}>
+            {/* Delete Button */}
+            <TouchableOpacity
+              style={styles.deleteButtonContainer}
+              onPress={() => handleDeleteOrder(item.orderID)}
+            >
+              <MaterialIcons name="delete" size={28} color="black" />
+            </TouchableOpacity>
+            {/* Edit Button */}
+            {daysDifference <= 7 && (
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => handleEditButtonPress(item)}
+              >
+                <FontAwesome6 name="edit" size={24} color="black" />
+              </TouchableOpacity>
             )}
           </View>
-
-          {/* handel edit Button based on order date is less or greater then 7 days */}
-          {daysDifference <= 7 && (
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => handleEditButtonPress(item)}
-            >
-              <Text style={styles.editButtonText}>Edit</Text>
-            </TouchableOpacity>
-          )}
-          <Text style={styles.orderInfo}>
-            Payment Status: {item.paymentStatus}
-          </Text>
-          <Text style={styles.orderInfo}>
-            Payment Amount: ₹{item.totalAmount}
-          </Text>
-          <Text style={styles.orderInfo}>Date: {item.orderDate}</Text>
         </View>
-      </>
+
+        <View style={styles.table}>
+          <View style={styles.tableHeaderRow}>
+            <Text style={styles.tableHeader}>Product</Text>
+            <Text style={styles.tableHeader}>Quantity</Text>
+          </View>
+
+          {item.orderDetails && item.orderDetails.length > 0 ? (
+            item.orderDetails.map((order, index) => (
+              <View key={index} style={styles.tableRow}>
+                <Text style={styles.tableCell}>{order.product}</Text>
+                <TextInput
+                  style={styles.tableCell}
+                  value={order.quantity.toString()}
+                  onChangeText={(text) =>
+                    handleProductQuantityChange(order.product, text)
+                  }
+                  keyboardType="numeric"
+                />
+              </View>
+            ))
+          ) : (
+            <Text>No order details available</Text>
+          )}
+        </View>
+
+        <Text style={styles.orderInfo}>
+          Payment Status: {item.paymentStatus}
+        </Text>
+        <Text style={styles.orderInfo}>
+          Payment Amount: ₹{item.totalAmount}
+        </Text>
+        <Text style={styles.orderInfo}>Date: {item.orderDate}</Text>
+      </View>
     );
   };
 
   const filteredOrders = ordersDetails.filter(
     (order) =>
       order.customerName.toLowerCase().includes(searchText.toLowerCase()) &&
-      (!selectedDate || order.date === selectedDate)
+      (!selectedDate ||
+        moment(order.date, "DD-MM-YYYY").isSame(selectedDate, "day"))
   );
 
   const clearFilter = () => {
@@ -440,7 +448,7 @@ const OrderPage = ({ navigation }) => {
               <CalendarPicker
                 onDateChange={(date) => {
                   const formattedDate = date
-                    ? moment(date).format("YYYY-MM-DD")
+                    ? moment(date).format("DD-MM-YYYY")
                     : null;
                   setSelectedDate(formattedDate);
                   setIsCalendarVisible(false);
@@ -464,6 +472,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  customerName: {
+    flexDirection: "row",
+  },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -478,6 +489,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginRight: 10,
   },
+  productListContainer: {},
   filterApplied: {
     backgroundColor: "#85c27f",
     color: "white",
@@ -524,11 +536,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     position: "relative",
   },
-  deleteButton: {
-    position: "absolute",
-    top: 5,
-    right: 5,
-  },
+
   customerInfo: {
     fontWeight: "bold",
     marginBottom: 5,
@@ -556,19 +564,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 5,
   },
-  tableCell: {},
-  editButton: {
-    backgroundColor: "#ccc",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    alignSelf: "flex-end",
-    marginTop: 10,
+
+  editAndDeletebuttonContainer: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  editButtonText: {
-    fontWeight: "bold",
+  leftContainer: {
+    flex: 4.2,
+  },
+  rightContainer: {
+    flex: 0.8,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    top: -15,
+  },
+  deleteButtonContainer: {
+    paddingRight: 12,
+  },
+
+  editButton: {
+    paddingRight: 10,
   },
   orderInfo: {
+    marginTop: 5,
     marginBottom: 5,
   },
 

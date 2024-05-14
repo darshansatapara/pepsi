@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Picker } from "@react-native-picker/picker";
-import SendIntentAndroid from "react-native-send-intent";
+
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import {
 import client from "../axios";
 
 const AddNewOrderPage = ({ navigation, route }) => {
-  const { fetchOrdersData } = route.params;
+  const { fatchOrdersData } = route.params;
   const [customerDetails, setCustomerDetails] = useState({
     customerID: "",
     customerName: "",
@@ -61,8 +61,10 @@ const AddNewOrderPage = ({ navigation, route }) => {
       setCustomerDetails(response.data);
       // console.log(customerDetails.customerID);
     } catch (error) {
-      console.error("Error fetching customer details:", error);
-      Alert.alert("Error", "Failed to fetch customer details");
+      Alert.alert(
+        "Not Found",
+        "Customer not found ,Please register first then 'Add Order'"
+      );
     }
   };
 
@@ -126,7 +128,6 @@ const AddNewOrderPage = ({ navigation, route }) => {
               });
               console.log("Order placed successfully:", response.data);
 
-
               Alert.alert(
                 "Success",
                 "Order placed successfully!",
@@ -137,7 +138,7 @@ const AddNewOrderPage = ({ navigation, route }) => {
                       setMobileNumber("");
                       setCustomerDetails({ customerID: "", customerName: "" });
                       setOrderDetails({ red: 0, black: 0, yellow: 0 });
-                      fetchOrdersData();
+                      fatchOrdersData();
                       navigation.goBack();
                     },
                   },

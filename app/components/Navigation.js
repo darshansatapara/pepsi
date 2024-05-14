@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import Home from "./Home";
 import CustomerDetails from "./CustomerDetailsPage";
-import OrderPage from './OrderPage';
+import OrderPage from "./OrderPage";
 import AddCustomerPage from "./AddCustomerPage";
 import AddNewOrder from "./AddNewOrder";
 import CustomerProfile from "./CustomerProfilePage";
