@@ -66,7 +66,7 @@ router.put("/updateCustomer/:customerID/:_id", async (req, res) => {
         customerName,
         mobileNumber,
         city,
-        address,  
+        address,
         pincode,
       },
       { new: true }

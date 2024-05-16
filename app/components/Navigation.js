@@ -18,7 +18,7 @@ const BottomTabNavigator = () => {
     <Tab.Navigator
       tabBarOptions={{
         style: { backgroundColor: "#f2f2f2" },
-        labelStyle: { fontSize: 12 },
+        labelStyle: { fontSize: 14 },
         activeTintColor: "blue",
         inactiveTintColor: "gray",
       }}

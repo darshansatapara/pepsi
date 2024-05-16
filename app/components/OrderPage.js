@@ -16,6 +16,8 @@ import moment from "moment";
 import CalendarPicker from "react-native-calendar-picker";
 import client from "../axios";
 import { differenceInDays, parse } from "date-fns";
+import { Card, DataTable } from "react-native-paper";
+import { LinearGradient } from "expo-linear-gradient";
 
 const availableProducts = ["Red Pepsi", "Black Pepsi", "Yellow Pepsi"];
 const OrderPage = ({ navigation }) => {
@@ -34,10 +36,7 @@ const OrderPage = ({ navigation }) => {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      await fatchOrdersData();
-    };
-    fetchData();
+    fatchOrdersData();
   }, []);
 
   /// fathc the all orders data
@@ -241,75 +240,70 @@ const OrderPage = ({ navigation }) => {
     const currentDate = new Date();
     const daysDifference = differenceInDays(currentDate, orderDate);
     return (
-      <View style={styles.orderCard} key={item.orderID}>
-        <View style={styles.editAndDeletebuttonContainer}>
-          {/* Left side: Text elements */}
-          <View style={styles.leftContainer}>
-            <Text style={styles.customerInfo}>Order ID: {item.orderID}</Text>
-            <Text style={styles.customerInfo}>
-              Customer ID: {item.customerID}
-            </Text>
-            <View style={styles.customerName}>
-              <Text style={styles.customerInfo}>Customer Name:</Text>
-              <Text style={styles.customerInfo}>{item.customerName}</Text>
+      <Card style={styles.card}>
+        <Card.Content>
+          <View style={styles.topRow}>
+            <View style={styles.leftContainer}>
+              <Text style={styles.customerInfo}>Order ID: {item.orderID}</Text>
+              <Text style={styles.customerInfo}>
+                Customer ID: {item.customerID}
+              </Text>
+              <View style={styles.customerName}>
+                <Text style={styles.customerInfo}>Customer Name:</Text>
+                <Text style={styles.customerInfo}>{item.customerName}</Text>
+              </View>
+            </View>
+            <View style={styles.rightContainer}>
+              {daysDifference <= 7 && (
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() => handleDeleteOrder(item.orderID)}
+                >
+                  <MaterialIcons name="delete" size={24} color="white" />
+                </TouchableOpacity>
+              )}
+              {daysDifference <= 7 && (
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() => handleEditButtonPress(item)}
+                >
+                  <FontAwesome6 name="edit" size={28} color="white" />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
-          {/* Right side: TouchableOpacity elements */}
-          <View style={styles.rightContainer}>
-            {/* Delete Button */}
-            {daysDifference <= 7 && (
-              <TouchableOpacity
-                style={styles.deleteButtonContainer}
-                onPress={() => handleDeleteOrder(item.orderID)}
-              >
-                <MaterialIcons name="delete" size={28} color="black" />
-              </TouchableOpacity>
-            )}
-            {/* Edit Button */}
-            {daysDifference <= 7 && (
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => handleEditButtonPress(item)}
-              >
-                <FontAwesome6 name="edit" size={24} color="black" />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
 
-        <View style={styles.table}>
-          <View style={styles.tableHeaderRow}>
-            <Text style={styles.tableHeader}>Product</Text>
-            <Text style={styles.tableHeader}>Quantity</Text>
+          <View style={styles.table}>
+            <DataTable>
+              <DataTable.Header>
+                <DataTable.Title>Product</DataTable.Title>
+                <DataTable.Title>Quantity</DataTable.Title>
+              </DataTable.Header>
+
+              <DataTable.Row style={styles.highlightRow}>
+                <DataTable.Cell>Red Pepsi</DataTable.Cell>
+                <DataTable.Cell>{item.redPepsiQuantity}</DataTable.Cell>
+              </DataTable.Row>
+              <DataTable.Row style={styles.highlightRow}>
+                <DataTable.Cell>Black Pepsi</DataTable.Cell>
+                <DataTable.Cell>{item.blackPepsiQuantity}</DataTable.Cell>
+              </DataTable.Row>
+              <DataTable.Row style={styles.highlightRow}>
+                <DataTable.Cell>Yellow Pepsi</DataTable.Cell>
+                <DataTable.Cell>{item.yellowPepsiQuantity}</DataTable.Cell>
+              </DataTable.Row>
+            </DataTable>
           </View>
 
-          {item.orderDetails && item.orderDetails.length > 0 ? (
-            item.orderDetails.map((order, index) => (
-              <View key={index} style={styles.tableRow}>
-                <Text style={styles.tableCell}>{order.product}</Text>
-                <TextInput
-                  style={styles.tableCell}
-                  value={order.quantity.toString()}
-                  onChangeText={(text) =>
-                    handleProductQuantityChange(order.product, text)
-                  }
-                  keyboardType="numeric"
-                />
-              </View>
-            ))
-          ) : (
-            <Text>No order details available</Text>
-          )}
-        </View>
-
-        <Text style={styles.orderInfo}>
-          Payment Status: {item.paymentStatus}
-        </Text>
-        <Text style={styles.orderInfo}>
-          Payment Amount: ₹{item.totalAmount}
-        </Text>
-        <Text style={styles.orderInfo}>Date: {item.orderDate}</Text>
-      </View>
+          <Text style={styles.orderInfo}>
+            Payment Status: {item.paymentStatus}
+          </Text>
+          <Text style={styles.orderInfo}>
+            Payment Amount: ₹{item.totalAmount}
+          </Text>
+          <Text style={styles.orderInfo}>Date: {item.orderDate}</Text>
+        </Card.Content>
+      </Card>
     );
   };
 
@@ -332,147 +326,157 @@ const OrderPage = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.addButton, filterApplied]}
-          onPress={handleAddNewOrder}
-        >
-          <Text>Add New Order</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.clearFilterButton,
-            filterApplied && styles.filterApplied,
-          ]}
-          onPress={clearFilter}
-        >
-          <Text>Clear Filter</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by customer name"
-          value={searchText}
-          onChangeText={(text) => setSearchText(text)}
-        />
-        <TouchableOpacity
-          style={styles.calendarIcon}
-          onPress={() => setIsCalendarVisible(true)}
-        >
-          <Feather name="calendar" size={24} color="black" />
-        </TouchableOpacity>
-      </View>
-      {filteredOrders.length === 0 && filterApplied && noRecordsFound}
-      <FlatList
-        data={filteredOrders}
-        renderItem={renderOrderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.orderList}
-      />
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={editModalVisible}
-        onRequestClose={() => setEditModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Order</Text>
-            {Object.keys(editedQuantities).map((product, index) => (
-              <View key={index} style={styles.inputRow}>
-                <Text style={styles.productName}>{product}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={editedQuantities[product]}
-                  onChangeText={(text) =>
-                    setEditedQuantities({
-                      ...editedQuantities,
-                      [product]: text,
-                    })
-                  }
-                  placeholder="Enter Quantity"
-                  keyboardType="numeric"
-                />
-              </View>
-            ))}
-            {availableOtherProducts.length > 0 && (
-              <View style={styles.inputRow}>
-                <Text style={styles.productName}>Add Other Product:</Text>
-                <Picker
-                  style={styles.picker}
-                  selectedValue={null}
-                  onValueChange={(value) => handleAddOtherProduct(value)}
-                >
-                  <Picker.Item label="-- Select Product --" value={null} />
-                  {availableOtherProducts.map((product, index) => (
-                    <Picker.Item key={index} label={product} value={product} />
-                  ))}
-                </Picker>
-              </View>
-            )}
-            <View style={styles.paymentStatusRow}>
-              <Text style={styles.paymentStatusText}>Payment Status:</Text>
-              <Picker
-                selectedValue={editedPaymentStatus}
-                style={styles.picker}
-                onValueChange={(value) => setEditedPaymentStatus(value)}
-              >
-                <Picker.Item label="Paid" value="Paid" />
-                <Picker.Item label="Pending" value="Pending" />
-              </Picker>
-            </View>
-            <View style={styles.inputRow}>
-              <Text style={styles.productName}>
-                Total Amount: {totalAmount.totalAmount}
-              </Text>
-            </View>
-            <View style={styles.buttonRow}>
-              <Button title="Save" onPress={handleSaveEdit} />
-              <Button
-                title="Cancel"
-                onPress={() => setEditModalVisible(false)}
-              />
-            </View>
-          </View>
+    <LinearGradient
+      colors={["rgba(50,50,54,1)", "rgba(232,213,163,1)", "rgba(209,8,56,1)"]}
+      style={styles.container}
+    >
+      <View style={styles.container}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by customer name"
+            value={searchText}
+            onChangeText={(text) => setSearchText(text)}
+          />
+          <TouchableOpacity
+            style={styles.calendarIcon}
+            onPress={() => setIsCalendarVisible(true)}
+          >
+            <Feather name="calendar" size={24} color="black" />
+          </TouchableOpacity>
         </View>
-      </Modal>
-      {isCalendarVisible && (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.addButton, filterApplied]}
+            onPress={handleAddNewOrder}
+          >
+            <Text>Add New Order</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.clearFilterButton,
+              filterApplied && styles.filterApplied,
+            ]}
+            onPress={clearFilter}
+          >
+            <Text>Clear Filter</Text>
+          </TouchableOpacity>
+        </View>
+        {filteredOrders.length === 0 && filterApplied && noRecordsFound}
+        <FlatList
+          data={filteredOrders}
+          renderItem={renderOrderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.orderList}
+        />
         <Modal
           animationType="slide"
           transparent={true}
-          visible={isCalendarVisible}
-          onRequestClose={() => setIsCalendarVisible(false)}
+          visible={editModalVisible}
+          onRequestClose={() => setEditModalVisible(false)}
         >
           <View style={styles.modalContainer}>
-            <View style={styles.calendarContainer}>
-              <CalendarPicker
-                onDateChange={(date) => {
-                  const formattedDate = date
-                    ? moment(date).format("DD-MM-YYYY")
-                    : null;
-                  setSelectedDate(formattedDate);
-                  setIsCalendarVisible(false);
-                }}
-              />
-              <Button
-                title="Close"
-                onPress={() => setIsCalendarVisible(false)}
-                color="#ff7043"
-              />
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Edit Order</Text>
+              {Object.keys(editedQuantities).map((product, index) => (
+                <View key={index} style={styles.inputRow}>
+                  <Text style={styles.productName}>{product}</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={editedQuantities[product]}
+                    onChangeText={(text) =>
+                      setEditedQuantities({
+                        ...editedQuantities,
+                        [product]: text,
+                      })
+                    }
+                    placeholder="Enter Quantity"
+                    keyboardType="numeric"
+                  />
+                </View>
+              ))}
+              {availableOtherProducts.length > 0 && (
+                <View style={styles.inputRow}>
+                  <Text style={styles.productName}>Add Other Product:</Text>
+                  <Picker
+                    style={styles.picker}
+                    selectedValue={null}
+                    onValueChange={(value) => handleAddOtherProduct(value)}
+                  >
+                    <Picker.Item label="-- Select Product --" value={null} />
+                    {availableOtherProducts.map((product, index) => (
+                      <Picker.Item
+                        key={index}
+                        label={product}
+                        value={product}
+                      />
+                    ))}
+                  </Picker>
+                </View>
+              )}
+              <View style={styles.paymentStatusRow}>
+                <Text style={styles.paymentStatusText}>Payment Status:</Text>
+                <Picker
+                  selectedValue={editedPaymentStatus}
+                  style={styles.picker}
+                  onValueChange={(value) => setEditedPaymentStatus(value)}
+                >
+                  <Picker.Item label="Paid" value="Paid" />
+                  <Picker.Item label="Pending" value="Pending" />
+                </Picker>
+              </View>
+              <View style={styles.inputRow}>
+                <Text style={styles.productName}>
+                  Total Amount: {totalAmount.totalAmount}
+                </Text>
+              </View>
+              <View style={styles.buttonRow}>
+                <Button title="Save" onPress={handleSaveEdit} />
+                <Button
+                  title="Cancel"
+                  onPress={() => setEditModalVisible(false)}
+                />
+              </View>
             </View>
           </View>
         </Modal>
-      )}
-    </View>
+        {isCalendarVisible && (
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={isCalendarVisible}
+            onRequestClose={() => setIsCalendarVisible(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.calendarContainer}>
+                <CalendarPicker
+                  onDateChange={(date) => {
+                    const formattedDate = date
+                      ? moment(date).format("DD-MM-YYYY")
+                      : null;
+                    setSelectedDate(formattedDate);
+                    setIsCalendarVisible(false);
+                  }}
+                />
+                <Button
+                  title="Close"
+                  onPress={() => setIsCalendarVisible(false)}
+                  color="#ff7043"
+                />
+              </View>
+            </View>
+          </Modal>
+        )}
+      </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: "transparent",
+    padding: 8,
   },
   customerName: {
     flexDirection: "row",
@@ -514,13 +518,17 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 10,
+    color: "white",
   },
   searchInput: {
     flex: 1,
     height: 40,
+    color: "white",
+    backgroundColor: "rgba(224, 218, 218, 0.5)",
+    borderColor: "#ee8f8f",
     borderWidth: 1,
-    borderColor: "gray",
+    borderRadius: 15,
     paddingHorizontal: 10,
     marginRight: 10,
   },
@@ -530,67 +538,100 @@ const styles = StyleSheet.create({
   orderList: {
     paddingBottom: 20,
   },
-  orderCard: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    padding: 10,
+  card: {
+    margin: 20,
+    backgroundColor: "transparent",
+    borderRadius: 10,
+  },
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 10,
-    position: "relative",
   },
-
+  leftContainer: {
+    flex: 4,
+  },
+  rightContainer: {
+    flexDirection: "row",
+  },
+  button: {
+    backgroundColor: "#333",
+    borderRadius: 25,
+    padding: 10,
+    paddingLeft: 11,
+    width: 45,
+    height: 50,
+    marginRight: 10,
+  },
   customerInfo: {
-    fontWeight: "bold",
     marginBottom: 5,
+    color: "#333",
   },
-  table: {
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-  },
-  tableHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "#f0f0f0",
-    borderColor: "black",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  tableHeader: {
-    fontWeight: "bold",
-  },
-  tableRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 5,
-  },
-
-  editAndDeletebuttonContainer: {
+  customerName: {
     flexDirection: "row",
     alignItems: "center",
   },
-  leftContainer: {
-    flex: 4.2,
-  },
-  rightContainer: {
-    flex: 0.8,
+  table: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    top: -15,
-  },
-  deleteButtonContainer: {
-    paddingRight: 12,
-  },
+    justifyContent: "space-between",
+    backgroundColor: "#c0d1ed",
 
-  editButton: {
-    paddingRight: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  orderTableText: {
+    color: "balck",
   },
   orderInfo: {
-    marginTop: 5,
     marginBottom: 5,
+    color: "#333",
   },
+  highlightRow: {
+    backgroundColor: "#c0d1ed",
+  },
+
+  // tableHeaderRow: {
+  //   flexDirection: "row",
+  //   justifyContent: "space-between",
+  //   backgroundColor: "#f0f0f0",
+  //   borderColor: "black",
+  //   paddingHorizontal: 10,
+  //   paddingVertical: 5,
+  // },
+  // tableHeader: {
+  //   fontWeight: "bold",
+  // },
+  // tableRow: {
+  //   flexDirection: "row",
+  //   justifyContent: "space-between",
+  //   paddingHorizontal: 20,
+  //   paddingVertical: 5,
+  // },
+
+  // editAndDeletebuttonContainer: {
+  //   flexDirection: "row",
+  //   alignItems: "center",
+  // },
+  // leftContainer: {
+  //   flex: 4.2,
+  // },
+  // rightContainer: {
+  //   flex: 0.8,
+  //   flexDirection: "row",
+  //   justifyContent: "flex-end",
+  //   top: -15,
+  // },
+  // deleteButtonContainer: {
+  //   paddingRight: 12,
+  // },
+
+  // editButton: {
+  //   paddingRight: 10,
+  // },
+  // orderInfo: {
+  //   marginTop: 5,
+  //   marginBottom: 5,
+  // },
 
   modalContent: {
     backgroundColor: "#fff",

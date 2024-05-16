@@ -11,5 +11,6 @@ app.use("/api/Order", OrderRouter);
 const port = process.env.PORT || 5000;
 
 // Connect to MongoDB when the server starts
-connectToMongo();
+
+async () => await connectToMongo();
 app.listen(port, () => console.log(`Server running on port ${port}`));
