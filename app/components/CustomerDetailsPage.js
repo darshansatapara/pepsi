@@ -8,16 +8,38 @@ import {
   StyleSheet,
 } from "react-native";
 import client from "../axios"; // Import Axios for making API requests
+import { LinearGradient } from "expo-linear-gradient";
+import { Entypo } from "@expo/vector-icons";
+// import { white } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
 
 const CustomerCard = ({ customer, onPress }) => (
-  <TouchableOpacity
-    style={styles.customerCard}
-    onPress={() => onPress(customer)}
-  >
-    <Text>Customer: {customer.customerName}</Text>
-    <Text>Mobile Number: {customer.mobileNumber}</Text>
-    <Text>ID: {customer.customerID}</Text>
-  </TouchableOpacity>
+  <View>
+    <LinearGradient
+      colors={["rgba(18,20,37,0.91)", "rgba(54,54,54,0.94)"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.customerCard}
+    >
+      <TouchableOpacity
+        style={styles.cardViewStyle}
+        onPress={() => onPress(customer)}
+      >
+        <View style={styles.customerDetails}>
+          <View style={styles.customerName}>
+            <Text style={styles.TextColor}>Customer:</Text>
+            <Text style={styles.TextColor}> {customer.customerName}</Text>
+          </View>
+          <Text style={styles.TextColor}>
+            Mobile Number: {customer.mobileNumber}
+          </Text>
+          <Text style={styles.TextColor}>ID: {customer.customerID}</Text>
+        </View>
+        <View style={styles.VArrow}>
+          <Entypo name="chevron-right" size={24} color="#e1e1e1" />
+        </View>
+      </TouchableOpacity>
+    </LinearGradient>
+  </View>
 );
 
 const CustomerDetailsPage = ({ navigation }) => {
@@ -68,16 +90,23 @@ const CustomerDetailsPage = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={["#262c37", "#11131c", "rgba(20,26,52,0.96)"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      locations={[0.23, 0.5, 0.96]}
+      style={styles.container}
+    >
       <TextInput
         style={styles.searchInput}
         placeholder="Search by name or mobile number"
         value={searchQuery}
+        placeholderTextColor={"#e1e1e1"}
         onChangeText={setSearchQuery}
       />
       <ScrollView style={styles.customerList}>
         {filteredCustomers.length === 0 ? (
-          <Text>No customers found</Text>
+          <Text style={styles.NoRecords}>No customers found</Text>
         ) : (
           filteredCustomers.map((customer) => (
             <CustomerCard
@@ -91,19 +120,30 @@ const CustomerDetailsPage = ({ navigation }) => {
       <TouchableOpacity style={styles.addButton} onPress={handleAddCustomer}>
         <Text>Add Customer</Text>
       </TouchableOpacity>
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: 15,
+  },
+  TextColor: {
+    color: "#e1e1e1",
+    fontSize: 15,
+  },
+  NoRecords:{
+    color: "#e1e1e1",
+    justifyContent: "center",
+    alignSelf: "center",
   },
   searchInput: {
     height: 40,
     borderColor: "#ccc",
+    backgroundColor: "rgba(255, 255, 255,0.10)",
     borderWidth: 1,
+    color: "white",
     borderRadius: 5,
     marginBottom: 20,
     paddingHorizontal: 10,
@@ -111,12 +151,15 @@ const styles = StyleSheet.create({
   customerList: {
     flex: 1,
   },
+  cardViewStyle: {
+    flexDirection: "row",
+  },
   customerCard: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#fff",
     borderRadius: 5,
     padding: 10,
-    marginBottom: 10,
+    marginBottom: 15,
   },
   addButton: {
     alignItems: "center",
@@ -124,6 +167,18 @@ const styles = StyleSheet.create({
     backgroundColor: "lightblue",
     padding: 10,
     borderRadius: 5,
+  },
+  customerName: {
+    flexDirection: "row",
+    width: 250,
+    color: "white",
+  },
+  customerDetails: {
+    flex: 5,
+  },
+  VArrow: {
+    flex: 0,
+    justifyContent: "center",
   },
 });
 

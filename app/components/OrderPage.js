@@ -15,7 +15,7 @@ import { Feather, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import moment from "moment";
 import CalendarPicker from "react-native-calendar-picker";
 import client from "../axios";
-import { differenceInDays, parse } from "date-fns";
+import { differenceInDays, parse, format, isSameDay } from "date-fns";
 import { Card, DataTable } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -250,7 +250,7 @@ const OrderPage = ({ navigation }) => {
               </Text>
               <View style={styles.customerName}>
                 <Text style={styles.customerInfo}>Customer Name:</Text>
-                <Text style={styles.customerInfo}>{item.customerName}</Text>
+                <Text style={styles.customerInfo}> {item.customerName}</Text>
               </View>
             </View>
             <View style={styles.rightContainer}>
@@ -259,7 +259,7 @@ const OrderPage = ({ navigation }) => {
                   style={styles.button}
                   onPress={() => handleDeleteOrder(item.orderID)}
                 >
-                  <MaterialIcons name="delete" size={24} color="white" />
+                  <MaterialIcons name="delete" size={24} color="#21243a" />
                 </TouchableOpacity>
               )}
               {daysDifference <= 7 && (
@@ -267,30 +267,49 @@ const OrderPage = ({ navigation }) => {
                   style={styles.button}
                   onPress={() => handleEditButtonPress(item)}
                 >
-                  <FontAwesome6 name="edit" size={28} color="white" />
+                  <FontAwesome6 name="edit" size={24} color="#21243a" />
                 </TouchableOpacity>
               )}
             </View>
           </View>
-
           <View style={styles.table}>
             <DataTable>
-              <DataTable.Header>
-                <DataTable.Title>Product</DataTable.Title>
-                <DataTable.Title>Quantity</DataTable.Title>
+              <DataTable.Header style={styles.header}>
+                <DataTable.Title>
+                  <Text style={styles.titleText}>Product</Text>
+                </DataTable.Title>
+                <DataTable.Title>
+                  <Text style={styles.titleText}>Quantity</Text>
+                </DataTable.Title>
               </DataTable.Header>
 
-              <DataTable.Row style={styles.highlightRow}>
-                <DataTable.Cell>Red Pepsi</DataTable.Cell>
-                <DataTable.Cell>{item.redPepsiQuantity}</DataTable.Cell>
+              <DataTable.Row style={styles.row}>
+                <DataTable.Cell>
+                  <Text style={styles.cellText}>Red Pepsi</Text>
+                </DataTable.Cell>
+                <DataTable.Cell>
+                  <Text style={styles.cellText}>{item.redPepsiQuantity}</Text>
+                </DataTable.Cell>
               </DataTable.Row>
-              <DataTable.Row style={styles.highlightRow}>
-                <DataTable.Cell>Black Pepsi</DataTable.Cell>
-                <DataTable.Cell>{item.blackPepsiQuantity}</DataTable.Cell>
+
+              <DataTable.Row style={styles.row}>
+                <DataTable.Cell>
+                  <Text style={styles.cellText}>Black Pepsi</Text>
+                </DataTable.Cell>
+                <DataTable.Cell>
+                  <Text style={styles.cellText}>{item.blackPepsiQuantity}</Text>
+                </DataTable.Cell>
               </DataTable.Row>
-              <DataTable.Row style={styles.highlightRow}>
-                <DataTable.Cell>Yellow Pepsi</DataTable.Cell>
-                <DataTable.Cell>{item.yellowPepsiQuantity}</DataTable.Cell>
+
+              <DataTable.Row style={styles.row}>
+                <DataTable.Cell>
+                  <Text style={styles.cellText}>Yellow Pepsi</Text>
+                </DataTable.Cell>
+                <DataTable.Cell>
+                  <Text style={styles.cellText}>
+                    {item.yellowPepsiQuantity}
+                  </Text>
+                </DataTable.Cell>
               </DataTable.Row>
             </DataTable>
           </View>
@@ -311,7 +330,10 @@ const OrderPage = ({ navigation }) => {
     (order) =>
       order.customerName.toLowerCase().includes(searchText.toLowerCase()) &&
       (!selectedDate ||
-        moment(order.date, "DD-MM-YYYY").isSame(selectedDate, "day"))
+        isSameDay(
+          parse(order.orderDate, "dd-MM-yyyy", new Date()),
+          parse(selectedDate, "dd-MM-yyyy", new Date())
+        ))
   );
 
   const clearFilter = () => {
@@ -321,13 +343,16 @@ const OrderPage = ({ navigation }) => {
 
   const noRecordsFound = (
     <View style={styles.noRecordsFound}>
-      <Text>No records found</Text>
+      <Text style={styles.NoRecordes}>No records found</Text>
     </View>
   );
 
   return (
     <LinearGradient
-      colors={["rgba(50,50,54,1)", "rgba(232,213,163,1)", "rgba(209,8,56,1)"]}
+      colors={["#262c37", "#11131c", "rgba(20,26,52,0.96)"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      locations={[0.23, 0.5, 0.96]}
       style={styles.container}
     >
       <View style={styles.container}>
@@ -342,7 +367,7 @@ const OrderPage = ({ navigation }) => {
             style={styles.calendarIcon}
             onPress={() => setIsCalendarVisible(true)}
           >
-            <Feather name="calendar" size={24} color="black" />
+            <Feather name="calendar" size={27} color="#e7d597" />
           </TouchableOpacity>
         </View>
         <View style={styles.buttonContainer}>
@@ -452,7 +477,7 @@ const OrderPage = ({ navigation }) => {
                 <CalendarPicker
                   onDateChange={(date) => {
                     const formattedDate = date
-                      ? moment(date).format("DD-MM-YYYY")
+                      ? format(date, "dd-MM-yyyy")
                       : null;
                     setSelectedDate(formattedDate);
                     setIsCalendarVisible(false);
@@ -476,10 +501,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "transparent",
+    paddingTop: 5,
     padding: 8,
-  },
-  customerName: {
-    flexDirection: "row",
   },
   buttonContainer: {
     flexDirection: "row",
@@ -526,7 +549,8 @@ const styles = StyleSheet.create({
     height: 40,
     color: "white",
     backgroundColor: "rgba(224, 218, 218, 0.5)",
-    borderColor: "#ee8f8f",
+    borderColor: "#e7d597",
+    fontWeight: "900",
     borderWidth: 1,
     borderRadius: 15,
     paddingHorizontal: 10,
@@ -539,33 +563,39 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   card: {
-    margin: 20,
+    margin: 5,
     backgroundColor: "transparent",
-    borderRadius: 10,
+    borderRadius: 5,
+    shadowColor: "#ffdd9d",
+    shadowOpacity: 1,
   },
   topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10,
+    marginBottom: 13,
+    marginTop: 5,
   },
   leftContainer: {
     flex: 4,
   },
   rightContainer: {
+    marginTop: -2,
+    marginRight: -10,
     flexDirection: "row",
   },
   button: {
-    backgroundColor: "#333",
-    borderRadius: 25,
-    padding: 10,
-    paddingLeft: 11,
-    width: 45,
-    height: 50,
+    backgroundColor: "#d1d1d1",
+    borderRadius: 15,
+    paddingTop: 3,
+    paddingLeft: 7,
+    width: 40,
+    height: 35,
     marginRight: 10,
   },
   customerInfo: {
     marginBottom: 5,
-    color: "#333",
+    fontSize: 15,
+    color: "#efefef",
   },
   customerName: {
     flexDirection: "row",
@@ -574,64 +604,44 @@ const styles = StyleSheet.create({
   table: {
     flexDirection: "row",
     justifyContent: "space-between",
-    backgroundColor: "#c0d1ed",
-
-    borderRadius: 5,
-    marginBottom: 10,
+    marginBottom: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#c5c5c5",
+    overflow: "hidden",
   },
-  orderTableText: {
-    color: "balck",
+  highlightRow: {
+    color: "white",
+  },
+  NoRecordes:{
+    color: "white",
+    justifyContet: "center",
+    alignSelf: "center",
+  },
+
+  header: {
+    backgroundColor: "transparent",
+  },
+  titleText: {
+    fontWeight: "bold",
+    fontSize: 15,
+    color: "white",
+    fontWeight: "bold",
+  },
+  row: {
+    backgroundColor: "transparent",
+  },
+  cellText: {
+    fontWeight: "bold",
+    fontSize: 14,
+    color: "white",
   },
   orderInfo: {
     marginBottom: 5,
-    color: "#333",
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#fff",
   },
-  highlightRow: {
-    backgroundColor: "#c0d1ed",
-  },
-
-  // tableHeaderRow: {
-  //   flexDirection: "row",
-  //   justifyContent: "space-between",
-  //   backgroundColor: "#f0f0f0",
-  //   borderColor: "black",
-  //   paddingHorizontal: 10,
-  //   paddingVertical: 5,
-  // },
-  // tableHeader: {
-  //   fontWeight: "bold",
-  // },
-  // tableRow: {
-  //   flexDirection: "row",
-  //   justifyContent: "space-between",
-  //   paddingHorizontal: 20,
-  //   paddingVertical: 5,
-  // },
-
-  // editAndDeletebuttonContainer: {
-  //   flexDirection: "row",
-  //   alignItems: "center",
-  // },
-  // leftContainer: {
-  //   flex: 4.2,
-  // },
-  // rightContainer: {
-  //   flex: 0.8,
-  //   flexDirection: "row",
-  //   justifyContent: "flex-end",
-  //   top: -15,
-  // },
-  // deleteButtonContainer: {
-  //   paddingRight: 12,
-  // },
-
-  // editButton: {
-  //   paddingRight: 10,
-  // },
-  // orderInfo: {
-  //   marginTop: 5,
-  //   marginBottom: 5,
-  // },
 
   modalContent: {
     backgroundColor: "#fff",
