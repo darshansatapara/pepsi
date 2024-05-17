@@ -18,18 +18,20 @@ const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
       tabBarOptions={{
-        labelStyle: { fontSize: 15 },
+        labelStyle: { fontSize: 15, color: "#000" },
         activeTintColor: "#151B54",
-        inactiveTintColor: "#52595D",
+        inactiveTintColor: "#B4B4B8",
         backgroundColor: "#ffefd5",
+        color: "#000",
       }}
     >
       <Tab.Screen
         name="Home"
         component={Home}
         options={{
-          headerTintColor: "#151B54",
+          headerTintColor: "#E1F0DA",
           headerStatusBarHeight: 22,
+
           title: "Home",
           headerTitleStyle: {
             fontSize: 25,
@@ -38,20 +40,20 @@ const BottomTabNavigator = () => {
           },
 
           headerStyle: {
-            backgroundColor: "#ffdab9",
+            backgroundColor: "#FFF6E9",
           },
           headerTitle: { color: "white", fontSize: 16 },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
-          tabBarItemStyle: { backgroundColor: "#ffdab9" },
+          tabBarItemStyle: { backgroundColor: "#F9F3F3" },
         }}
       />
       <Tab.Screen
         name="Orders"
         component={OrderPage}
         options={{
-          headerTintColor: "#151B54",
+          headerTintColor: "#E1F0DA",
           headerStatusBarHeight: 22,
           title: "Orders",
           headerTitleStyle: {
@@ -60,12 +62,12 @@ const BottomTabNavigator = () => {
             fontWeight: "bold",
           },
           headerStyle: {
-            backgroundColor: "#ffdab9",
+            backgroundColor: "#FFF6E9",
           },
           tabBarIcon: ({ color, size }) => (
             <FontAwesome6 name="table-list" size={24} color={color} />
           ),
-          tabBarItemStyle: { backgroundColor: "#ffdab9" },
+          tabBarItemStyle: { backgroundColor: "#F9F3F3" },
         }}
       />
       <Tab.Screen
@@ -81,14 +83,13 @@ const BottomTabNavigator = () => {
           headerTintColor: "#151B54",
           headerStatusBarHeight: 22,
           headerStyle: {
-            backgroundColor: "#ffdab9",
+            backgroundColor: "#FFF6E9",
           },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
-          tabBarItemStyle: { backgroundColor: "#ffdab9" },
+          tabBarItemStyle: { backgroundColor: "#F9F3F3" },
         }}
-        navigationKey="s"
       />
     </Tab.Navigator>
   );
@@ -103,9 +104,56 @@ const StackNavigator = () => {
           component={BottomTabNavigator}
           options={{ headerShown: false }}
         />
-        <Stack.Screen name="AddCustomer" component={AddCustomerPage} />
-        <Stack.Screen name="AddNewOrder" component={AddNewOrder} />
-        <Stack.Screen name="CustomerProfile" component={CustomerProfile} />
+        <Stack.Screen
+          name="AddCustomer"
+          options={{
+            title: "AddCustomer",
+            headerTitleStyle: {
+              fontSize: 25,
+              color: "#151B54",
+              fontWeight: "bold",
+            },
+            headerTintColor: "#151B54",
+            headerStyle: {
+              backgroundColor: "#FFF6E9",
+            },
+          }}
+          component={AddCustomerPage}
+        />
+
+        <Stack.Screen
+          name="AddNewOrder"
+          options={{
+            title: "AddNewOrder",
+            headerTitleStyle: {
+              fontSize: 25,
+              color: "#151B54",
+              fontWeight: "bold",
+            },
+            headerTintColor: "#151B54",
+            headerStyle: {
+              backgroundColor: "#FFF6E9",
+            },
+          }}
+          component={AddNewOrder}
+        />
+
+        <Stack.Screen
+          name="CustomerProfile"
+          component={CustomerProfile}
+          options={{
+            title: "Customer Profile",
+            headerTitleStyle: {
+              fontSize: 25,
+              color: "#151B54",
+              fontWeight: "bold",
+            },
+            headerTintColor: "#151B54",
+            headerStyle: {
+              backgroundColor: "#FFF6E9",
+            },
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

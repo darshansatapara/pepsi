@@ -1,28 +1,27 @@
 // HomeScreen.js
-import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { LinearGradient } from "expo-linear-gradient";
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
 const HomeScreen = () => {
   return (
-    <LinearGradient
-    colors={["#262c37", "#11131c", "rgba(20,26,52,0.96)"]}
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 1 }}
-    locations={[0.23, 0.5, 0.96]}
-    style={styles.container}
-  >
-    <View>
+    <View style={styles.container}>
       <Text>Home Screen</Text>
     </View>
-    </LinearGradient>
   );
 };
-const styles=StyleSheet.create({
-
+const styles = StyleSheet.create({
   container: {
+    borderTopColor: "#AAAAAA",
+    borderBottomColor: "#AAAAAA",
+    borderLeftColor: 0,
+    borderRightColor: 0,
+    borderWidth: 2,
     flex: 1,
-  }
-})
+    backgroundColor: "#EEF7FF",
+    paddingTop: 5,
+    padding: 8,
+  },
+});
 
 export default HomeScreen;

@@ -14,7 +14,6 @@ import client from "../axios"; // Import Axios for making API requests
 import { FontAwesome6 } from "@expo/vector-icons";
 
 const CustomerProfile = ({ route }) => {
-
   const fatchCustomerData = route.params.fatchCustomerData;
   const customerID = route.params.customerID;
   const [customer, setCustomer] = useState(null);
@@ -101,45 +100,83 @@ const CustomerProfile = ({ route }) => {
   };
   const OrderCard = ({ order }) => (
     <View style={styles.orderCard}>
-      <Text>Order ID: {order.orderID}</Text>
-      <Text>Order Date: {order.orderDate}</Text>
-      <Text>---------------------------</Text>
-      <Text>.....Produts:....</Text>
-      <Text>Red Pepsi: {order.redPepsiQuantity}</Text>
-      <Text>Black Pepsi: {order.blackPepsiQuantity}</Text>
-      <Text>Yellow Pepsi: {order.yellowPepsiQuantity}</Text>
-      <Text>---------------------------</Text>
-      <Text>Total Amount: ${order.totalAmount}</Text>
-      <Text>Payment Status: {order.paymentStatus}</Text>
+      <Text style={styles.orderDetailHeadingText}>
+        Order ID : <Text style={styles.OrderValueText}>{order.orderID}</Text>
+      </Text>
+      <Text style={styles.orderDetailHeadingText}>
+        Order Date :<Text style={styles.OrderValueText}>{order.orderDate}</Text>
+      </Text>
+      <Text style={{ marginBottom: 5 }}>-------------------------------</Text>
+      <Text style={styles.orderDetailHeadingText}>
+        Red Pepsi :
+        <Text style={styles.OrderValueText}>{order.redPepsiQuantity}</Text>
+      </Text>
+      <Text style={styles.orderDetailHeadingText}>
+        Black Pepsi :
+        <Text style={styles.OrderValueText}>{order.blackPepsiQuantity}</Text>
+      </Text>
+      <Text style={styles.orderDetailHeadingText}>
+        Yellow Pepsi :
+        <Text style={styles.OrderValueText}>{order.yellowPepsiQuantity}</Text>
+      </Text>
+      <Text style={{ marginBottom: 5 }}>-------------------------------</Text>
+      <Text style={styles.orderDetailHeadingText}>
+        Total Amount :
+        <Text style={styles.OrderValueText}> ₹ {order.totalAmount}</Text>
+      </Text>
+      <Text style={styles.orderDetailHeadingText}>
+        Payment Status :
+        <Text style={styles.OrderValueText}>{order.paymentStatus}</Text>
+      </Text>
     </View>
   );
   return customer ? (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       <View style={styles.customerDetails}>
-        <Text style={styles.heading}>Customer Details</Text>
-        <Text>Customer ID: {customer.customerID}</Text>
-        <Text>Name: {customer.customerName}</Text>
-        <Text>Mobile Number: {customer.mobileNumber}</Text>
-        <Text>City: {customer.city}</Text>
-        <Text>Address: {customer.address}</Text>
-        <Text>Pincode: {customer.pincode}</Text>
+        <Text style={styles.headingCustomer}>Customer Details</Text>
+
+        <Text style={styles.customerInfoHeadingText}>
+          Customer ID :
+          <Text style={styles.CustomerValue}> {customer.customerID}</Text>
+        </Text>
+        <Text style={styles.customerInfoHeadingText}>
+          Name :
+          <Text style={styles.CustomerValue}> {customer.customerName}</Text>
+        </Text>
+        <Text style={styles.customerInfoHeadingText}>
+          Mobile Number :
+          <Text style={styles.CustomerValue}> {customer.mobileNumber}</Text>
+        </Text>
+        <Text style={styles.customerInfoHeadingText}>
+          City : <Text> {customer.city}</Text>
+        </Text>
+        <Text style={styles.customerInfoHeadingText}>
+          Address :{" "}
+          <Text style={styles.CustomerValue}> {customer.address}</Text>
+        </Text>
+        <Text style={styles.customerInfoHeadingText}>
+          Pincode :{" "}
+          <Text style={styles.CustomerValue}> {customer.pincode}</Text>
+        </Text>
         <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
           <FontAwesome6 name="edit" size={24} color="black" />
         </TouchableOpacity>
       </View>
-      <View style={styles.orderDetails}>
-        <Text style={styles.heading}>Ordered Details</Text>
-        {orders.length === 0 ? (
-          <Text>No orders found</Text>
-        ) : (
-          <FlatList
-            data={orders}
-            keyExtractor={(item) => item.orderID}
-            renderItem={({ item }) => <OrderCard order={item} />}
-            horizontal
-          />
-        )}
-      </View>
+      <ScrollView>
+        <View style={styles.orderDetails}>
+          <Text style={styles.Orderheading}>Ordered Details :</Text>
+          {orders.length === 0 ? (
+            <Text>No orders found</Text>
+          ) : (
+            <FlatList
+              data={orders}
+              keyExtractor={(item) => item.orderID}
+              renderItem={({ item }) => <OrderCard order={item} />}
+              horizontal
+            />
+          )}
+        </View>
+      </ScrollView>
       {/* Editing Modal */}
       <Modal
         visible={editingCustomer !== null}
@@ -235,37 +272,87 @@ const CustomerProfile = ({ route }) => {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </View>
   ) : null;
 };
 
 const styles = StyleSheet.create({
   container: {
+    borderTopColor: "#AAAAAA",
+    borderLeftColor: 0,
+    borderRightColor: 0,
+    borderBottomColor: 0,
+    borderWidth: 2,
+    flex: 1,
     flexGrow: 1,
-    padding: 20,
+    backgroundColor: "#DFF5FF",
+    paddingTop: 5,
+    padding: 8,
   },
-  heading: {
-    fontSize: 18,
+  Ordercontainer: {
+    flexGrow: 1,
+    borderColor: "#000",
+  },
+  Orderheading: {
+    fontSize: 22,
+    left: 2,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 12,
+    borderBottomColor: "#000",
+    borderBottomWidth: 1,
+    borderStyle: "dashed",
+  },
+  headingCustomer: {
+    borderBottomColor: "black",
+    borderBottomWidth: 1,
+    borderStyle: "dashed",
+    fontSize: 22,
+    marginBottom: 7,
   },
   customerDetails: {
     marginBottom: 20,
-    backgroundColor: "#f0f0f0",
+    marginTop: 10,
+    backgroundColor: "#CDE8E5",
     padding: 15,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#000",
     position: "relative",
   },
+  customerInfoHeadingText: {
+    fontSize: 18,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginBottom: 5,
+  },
+  CustomerValue: {
+    fontSize: 16,
+  },
   orderDetails: {
-    marginBottom: 20,
+    marginTop: 25,
+    height: 350,
+    borderColor: "#000",
+    borderWidth: 1.5,
+    padding: 8,
+    paddingTop: 25,
+    shadowColor: "#000",
+    shadowOpacity: 1,
+    borderRadius: 15,
+  },
+  orderDetailHeadingText: {
+    fontSize: 17,
+    marginBottom: 5,
+  },
+  OrderValueText: {
+    fontSize: 16,
   },
   orderCard: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#000",
+    backgroundColor: "#CDE8E5",
     borderRadius: 5,
     padding: 10,
+    height: 250,
     marginRight: 10,
     width: 200,
   },

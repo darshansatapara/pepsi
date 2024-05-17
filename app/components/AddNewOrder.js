@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Picker } from "@react-native-picker/picker";
-
 import {
   View,
   Text,
@@ -12,6 +11,7 @@ import {
   Alert,
 } from "react-native";
 import client from "../axios";
+import { ScrollView } from "react-native-gesture-handler";
 
 const AddNewOrderPage = ({ navigation, route }) => {
   const { fatchOrdersData } = route.params;
@@ -59,7 +59,6 @@ const AddNewOrderPage = ({ navigation, route }) => {
         `/api/Customer/getCustomer/${newmobileNumber}`
       );
       setCustomerDetails(response.data);
-      // console.log(customerDetails.customerID);
     } catch (error) {
       Alert.alert(
         "Not Found",
@@ -93,7 +92,6 @@ const AddNewOrderPage = ({ navigation, route }) => {
     }
   };
 
-  //handle confirmation for the sen the valuse of the order
   const handleConfirmOrder = () => {
     const orderDetailsText = `Customer ID: ${customerDetails.customerID.toString()}\nCustomer Name: ${
       customerDetails.customerName
@@ -168,96 +166,162 @@ const AddNewOrderPage = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add New Order</Text>
-      <View style={styles.inputRow}>
-        <Text style={styles.label}>Mobile Number:</Text>
-        <TextInput
-          style={styles.input}
-          value={mobileNumber}
-          onChangeText={setMobileNumber}
-          keyboardType="phone-pad"
-          maxLength={10}
-        />
-      </View>
-      <View style={styles.inputRow}>
-        <Text style={styles.label}>Customer ID: </Text>
-        <TextInput
-          style={styles.input2}
-          value={customerDetails.customerID.toString()}
-          editable={false}
-        />
-      </View>
-      <View style={styles.inputRow}>
-        <Text style={styles.label}>Customer Name:</Text>
-        <TextInput
-          style={styles.input2}
-          value={customerDetails.customerName}
-          editable={false}
-        />
-      </View>
-      <View style={styles.inputRow}>
-        <Text style={styles.label}>Date:</Text>
-        <TextInput style={styles.input2} value={currentDate} editable={false} />
-      </View>
-      <View style={styles.inputRow}>
-        <Text style={styles.label}>Red Pepsi:</Text>
-        <TextInput
-          style={styles.input}
-          value={orderDetails.red.toString()}
-          onChangeText={(text) => handleProductQuantityChange("red", text)}
-          keyboardType="numeric"
-        />
-      </View>
-      <View style={styles.inputRow}>
-        <Text style={styles.label}>Black Pepsi:</Text>
-        <TextInput
-          style={styles.input}
-          value={orderDetails.black.toString()}
-          onChangeText={(text) => handleProductQuantityChange("black", text)}
-          keyboardType="numeric"
-        />
-      </View>
-      <View style={styles.inputRow}>
-        <Text style={styles.label}>Yellow Pepsi:</Text>
-        <TextInput
-          style={styles.input}
-          value={orderDetails.yellow.toString()}
-          onChangeText={(text) => handleProductQuantityChange("yellow", text)}
-          keyboardType="numeric"
-        />
-      </View>
-      <View style={styles.inputRow}>
-        <Text style={styles.label}>Payment Status:</Text>
-        <Picker
-          style={styles.input}
-          selectedValue={orderDetails.paymentStatus}
-          onValueChange={(itemValue, itemIndex) => setPaymentStatus(itemValue)}
-          enabled={true} // Set this to false to make the picker read-only
-        >
-          <Picker.Item label="Pending" value="pending" />
-          <Picker.Item label="Paid" value="paid" />
-        </Picker>
-      </View>
+      <ScrollView>
+        <View style={styles.inputRow}>
+          <Text style={styles.label}>Mobile No. :</Text>
+          <TextInput
+            style={styles.input}
+            value={mobileNumber}
+            onChangeText={setMobileNumber}
+            keyboardType="phone-pad"
+            maxLength={10}
+          />
+        </View>
+        <View style={styles.inputRow}>
+          <Text style={styles.label}>Customer ID : </Text>
+          <TextInput
+            style={styles.input2}
+            value={customerDetails.customerID.toString()}
+            editable={false}
+          />
+        </View>
+        <View style={styles.inputRow}>
+          <View style={styles.label}>
+            <Text>Customer Name :</Text>
+          </View>
+          <TextInput
+            style={styles.input2}
+            value={customerDetails.customerName}
+            editable={false}
+          />
+        </View>
+        <View style={styles.inputRow}>
+          <Text style={styles.label}>Date:</Text>
+          <TextInput
+            style={styles.input2}
+            value={currentDate}
+            editable={false}
+          />
+        </View>
+        <View style={styles.inputRow}>
+          <Text style={styles.label}>Red Pepsi:</Text>
+          <TextInput
+            style={styles.input}
+            value={orderDetails.red.toString()}
+            onChangeText={(text) => handleProductQuantityChange("red", text)}
+            keyboardType="numeric"
+          />
+        </View>
+        <View style={styles.inputRow}>
+          <Text style={styles.label}>Black Pepsi:</Text>
+          <TextInput
+            style={styles.input}
+            value={orderDetails.black.toString()}
+            onChangeText={(text) => handleProductQuantityChange("black", text)}
+            keyboardType="numeric"
+          />
+        </View>
+        <View style={styles.inputRow}>
+          <Text style={styles.label}>Yellow Pepsi:</Text>
+          <TextInput
+            style={styles.input}
+            value={orderDetails.yellow.toString()}
+            onChangeText={(text) => handleProductQuantityChange("yellow", text)}
+            keyboardType="numeric"
+          />
+        </View>
+        <View style={styles.inputRow}>
+          <Text style={styles.label}>Payment Status:</Text>
+          <Picker
+            style={styles.input}
+            selectedValue={paymentStatus}
+            onValueChange={(itemValue) => setPaymentStatus(itemValue)}
+            enabled={true}
+          >
+            <Picker.Item label="Pending" value="pending" />
+            <Picker.Item label="Paid" value="paid" />
+          </Picker>
+        </View>
 
-      <Text style={styles.totalAmount}>
-        Total Amount: ₹{totalAmount.totalAmount}
-      </Text>
-      <View style={styles.buttonRow}>
-        <Button title="Clear Form" onPress={clearForm} />
-        <Button
-          title="Confirm Order"
-          onPress={handleConfirmOrder}
-          disabled={!totalAmount.totalAmount}
-        />
-      </View>
+        <Text style={styles.totalAmount}>
+          Total Amount: ₹{totalAmount.totalAmount}
+        </Text>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity style={styles.clearButton} onPress={clearForm}>
+            <Text style={styles.buttonText}>Clear</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.confirmButton,
+              !totalAmount.totalAmount && styles.disabledButton,
+            ]}
+            onPress={handleConfirmOrder}
+            disabled={!totalAmount.totalAmount}
+          >
+            <Text style={styles.buttonText}>Confirm Order</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Modal
+          visible={confirmationShown}
+          transparent
+          onRequestClose={() => setConfirmationShown(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Confirm Order</Text>
+              <Text style={styles.orderDetailsText}>
+                Customer ID: {customerDetails.customerID}
+              </Text>
+              <Text style={styles.orderDetailsText}>
+                Customer Name: {customerDetails.customerName}
+              </Text>
+              <Text style={styles.orderDetailsText}>
+                Red Pepsi: {orderDetails.red}
+              </Text>
+              <Text style={styles.orderDetailsText}>
+                Black Pepsi: {orderDetails.black}
+              </Text>
+              <Text style={styles.orderDetailsText}>
+                Yellow Pepsi: {orderDetails.yellow}
+              </Text>
+              <Text style={styles.orderDetailsText}>
+                Total Amount: ₹{totalAmount.totalAmount}
+              </Text>
+              <Text style={styles.orderDetailsText}>Date: {currentDate}</Text>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={styles.clearButton}
+                  onPress={() => setConfirmationShown(false)}
+                >
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.confirmButton}
+                  onPress={handleConfirmOrder}
+                >
+                  <Text style={styles.buttonText}>Confirm</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    borderTopColor: "#AAAAAA",
+    borderBottomColor: "#AAAAAA",
+    borderLeftColor: 0,
+    borderRightColor: 0,
+    borderWidth: 2,
     flex: 1,
-    padding: 20,
+    backgroundColor: "#EEF7FF",
+    paddingTop: 10,
+    padding: 8,
   },
   title: {
     fontSize: 20,
@@ -265,16 +329,17 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "column",
+    alignItems: "flex-start",
     marginBottom: 10,
   },
   label: {
-    marginRight: 10,
+    fontSize: 17,
+    marginBottom: 5,
   },
   input2: {
-    flex: 1,
     height: 40,
+    width: "100%",
     borderColor: "gray",
     borderWidth: 1,
     backgroundColor: "#dcdcdc",
@@ -282,8 +347,9 @@ const styles = StyleSheet.create({
     color: "black",
   },
   input: {
-    flex: 1,
     height: 40,
+    width: "100%",
+    backgroundColor: "#CAF4FF",
     borderColor: "gray",
     borderWidth: 1,
     paddingHorizontal: 10,
@@ -292,6 +358,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
     fontWeight: "bold",
+    textAlign: "center",
   },
   modalContainer: {
     flex: 1,
@@ -319,6 +386,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 20,
+  },
+  clearButton: {
+    backgroundColor: "#FF6347",
+    padding: 10,
+    borderRadius: 5,
+  },
+  confirmButton: {
+    backgroundColor: "#32CD32",
+    padding: 10,
+    borderRadius: 5,
+  },
+  disabledButton: {
+    backgroundColor: "#A9A9A9",
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
   },
   dateText: {
     marginBottom: 10,

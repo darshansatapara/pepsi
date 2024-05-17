@@ -13,32 +13,25 @@ import { Entypo } from "@expo/vector-icons";
 // import { white } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
 
 const CustomerCard = ({ customer, onPress }) => (
-  <View>
-    <LinearGradient
-      colors={["rgba(18,20,37,0.91)", "rgba(54,54,54,0.94)"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.customerCard}
+  <View style={styles.customerCard}>
+    <TouchableOpacity
+      style={styles.cardViewStyle}
+      onPress={() => onPress(customer)}
     >
-      <TouchableOpacity
-        style={styles.cardViewStyle}
-        onPress={() => onPress(customer)}
-      >
-        <View style={styles.customerDetails}>
-          <View style={styles.customerName}>
-            <Text style={styles.TextColor}>Customer:</Text>
-            <Text style={styles.TextColor}> {customer.customerName}</Text>
-          </View>
-          <Text style={styles.TextColor}>
-            Mobile Number: {customer.mobileNumber}
-          </Text>
-          <Text style={styles.TextColor}>ID: {customer.customerID}</Text>
+      <View style={styles.customerDetails}>
+        <View style={styles.customerName}>
+          <Text style={styles.TextColor}>Customer:</Text>
+          <Text style={styles.TextColor}> {customer.customerName}</Text>
         </View>
-        <View style={styles.VArrow}>
-          <Entypo name="chevron-right" size={24} color="#e1e1e1" />
-        </View>
-      </TouchableOpacity>
-    </LinearGradient>
+        <Text style={styles.TextColor}>
+          Mobile Number: {customer.mobileNumber}
+        </Text>
+        <Text style={styles.TextColor}>ID: {customer.customerID}</Text>
+      </View>
+      <View style={styles.VArrow}>
+        <Entypo name="chevron-right" size={24} color="#000" />
+      </View>
+    </TouchableOpacity>
   </View>
 );
 
@@ -90,18 +83,12 @@ const CustomerDetailsPage = ({ navigation }) => {
   };
 
   return (
-    <LinearGradient
-      colors={["#262c37", "#11131c", "rgba(20,26,52,0.96)"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      locations={[0.23, 0.5, 0.96]}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <TextInput
         style={styles.searchInput}
         placeholder="Search by name or mobile number"
         value={searchQuery}
-        placeholderTextColor={"#e1e1e1"}
+        placeholderTextColor={"#000"}
         onChangeText={setSearchQuery}
       />
       <ScrollView style={styles.customerList}>
@@ -118,35 +105,48 @@ const CustomerDetailsPage = ({ navigation }) => {
         )}
       </ScrollView>
       <TouchableOpacity style={styles.addButton} onPress={handleAddCustomer}>
-        <Text>Add Customer</Text>
+        <Text style={styles.addButtonText}>Add Customer</Text>
       </TouchableOpacity>
-    </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    borderTopColor: "#AAAAAA",
+    borderBottomColor: "#AAAAAA",
+    borderLeftColor: 0,
+    borderRightColor: 0,
+    borderWidth: 2,
     flex: 1,
-    padding: 15,
+    backgroundColor: "#EEF7FF",
+    paddingTop: 7,
+    padding: 8,
   },
   TextColor: {
-    color: "#e1e1e1",
-    fontSize: 15,
+    color: "#000",
+    fontSize: 17,
+    marginBottom: 5
   },
-  NoRecords:{
-    color: "#e1e1e1",
+  NoRecords: {
+    color: "#240750",
     justifyContent: "center",
+    fontSize: 17,
+    top: 10,
+    padding: 80,
     alignSelf: "center",
   },
   searchInput: {
-    height: 40,
-    borderColor: "#ccc",
-    backgroundColor: "rgba(255, 255, 255,0.10)",
-    borderWidth: 1,
-    color: "white",
-    borderRadius: 5,
-    marginBottom: 20,
     paddingHorizontal: 10,
+    marginRight: 2,
+    height: 40,
+    borderColor: "#000",
+    backgroundColor: "rgba(224, 218, 218, 0.5)",
+    fontWeight: "900",
+    borderWidth: 1,
+    color: "#000",
+    borderRadius: 15,
+    marginBottom: 10,
   },
   customerList: {
     flex: 1,
@@ -155,11 +155,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   customerCard: {
-    borderWidth: 1,
-    borderColor: "#fff",
-    borderRadius: 5,
+    backgroundColor: "#CDE8E5",
+    borderRadius: 10,
+    borderWidth: 1.2,
+    borderCurve: "round",
+    shadowColor: "#000",
+    shadowOpacity: 1,
     padding: 10,
-    marginBottom: 15,
+    marginBottom: 6,
+  },
+
+  customerDetails: {
+    flex: 5,
+  },
+  customerName: {
+    flexDirection: "row",
+    width: 250,
+    color: "#000",
+  },
+  VArrow: {
+    flex: 0,
+    justifyContent: "center",
   },
   addButton: {
     alignItems: "center",
@@ -168,17 +184,9 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
   },
-  customerName: {
-    flexDirection: "row",
-    width: 250,
-    color: "white",
-  },
-  customerDetails: {
-    flex: 5,
-  },
-  VArrow: {
-    flex: 0,
-    justifyContent: "center",
+  addButtonText: {
+    fontSize: 17,
+    fontWeight: "bold",
   },
 });
 
