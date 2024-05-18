@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import client from "../axios"; // Import Axios for making API requests
 import { FontAwesome6 } from "@expo/vector-icons";
+import { useOrdersData } from "../context/OrdersDataContext";
 
 const CustomerProfile = ({ route }) => {
   const fatchCustomerData = route.params.fatchCustomerData;
@@ -20,7 +21,9 @@ const CustomerProfile = ({ route }) => {
   const [orders, setOrders] = useState([]);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [originalCustomer, setOriginalCustomer] = useState(null);
-
+  const { ordersDetails, setOrdersDetails, fatchOrdersData } = useOrdersData(
+    []
+  );
   useEffect(() => {
     fatchCustomerDataWithOrders();
   }, []);
@@ -68,7 +71,6 @@ const CustomerProfile = ({ route }) => {
         `/api/Order/updateCustomerDetailsInOrder/${customerID}`,
         editingCustomer
       );
-      console.log(response.data); // Log success message or handle response accordingly
     } catch (error) {
       console.error("Error updating customer details in order:", error);
       // Handle error
@@ -76,17 +78,28 @@ const CustomerProfile = ({ route }) => {
   };
   const handleSave = async () => {
     try {
-      console.log(editingCustomer._id);
       // Send updated customer details to backend API
       await client.put(
         `/api/Customer/updateCustomer/${customerID}/${editingCustomer._id}`,
         editingCustomer
       );
       setCustomer(editingCustomer);
-
       updateCustomerDetailsInOrder(customerID, editingCustomer);
       fatchCustomerData();
       fatchCustomerDataWithOrders();
+      const updatedOrderDetails = ordersDetails.map((order) => {
+        // If the order's customerName matches the old customerName, update it
+        if (order.customerName === customer.customerName) {
+          return {
+            ...order,
+            customerName: editingCustomer.customerName,
+          };
+        }
+        return order;
+      });
+
+      // Update state with the modified orderDetails
+      setOrdersDetails(updatedOrderDetails);
       setEditingCustomer(null);
       Alert.alert("Success", "Customer updated");
     } catch (error) {
@@ -134,30 +147,31 @@ const CustomerProfile = ({ route }) => {
     <View style={styles.container}>
       <View style={styles.customerDetails}>
         <Text style={styles.headingCustomer}>Customer Details</Text>
-
-        <Text style={styles.customerInfoHeadingText}>
-          Customer ID :
+        <View style={styles.manageRow}>
+          <Text style={styles.customerInfoHeadingText}>Customer ID :</Text>
           <Text style={styles.CustomerValue}> {customer.customerID}</Text>
-        </Text>
-        <Text style={styles.customerInfoHeadingText}>
-          Name :
+        </View>
+        <View style={styles.manageRow}>
+          <Text style={styles.customerInfoHeadingText}>Name :</Text>
           <Text style={styles.CustomerValue}> {customer.customerName}</Text>
-        </Text>
-        <Text style={styles.customerInfoHeadingText}>
-          Mobile Number :
+        </View>
+        <View style={styles.manageRow}>
+          <Text style={styles.customerInfoHeadingText}>Mobile Number :</Text>
           <Text style={styles.CustomerValue}> {customer.mobileNumber}</Text>
-        </Text>
-        <Text style={styles.customerInfoHeadingText}>
-          City : <Text> {customer.city}</Text>
-        </Text>
-        <Text style={styles.customerInfoHeadingText}>
-          Address :{" "}
+        </View>
+        <View style={styles.manageRow}>
+          <Text style={styles.customerInfoHeadingText}>City :</Text>
+          <Text style={styles.CustomerValue}> {customer.city}</Text>
+        </View>
+        <View style={styles.manageRow}>
+          <Text style={styles.customerInfoHeadingText}>Address :</Text>
           <Text style={styles.CustomerValue}> {customer.address}</Text>
-        </Text>
-        <Text style={styles.customerInfoHeadingText}>
-          Pincode :{" "}
+        </View>
+        <View style={styles.manageRow}>
+          <Text style={styles.customerInfoHeadingText}>Pincode :</Text>
           <Text style={styles.CustomerValue}> {customer.pincode}</Text>
-        </Text>
+        </View>
+
         <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
           <FontAwesome6 name="edit" size={24} color="black" />
         </TouchableOpacity>
@@ -166,7 +180,7 @@ const CustomerProfile = ({ route }) => {
         <View style={styles.orderDetails}>
           <Text style={styles.Orderheading}>Ordered Details :</Text>
           {orders.length === 0 ? (
-            <Text>No orders found</Text>
+            <Text style={{ fontSize: 18 }}>No orders found</Text>
           ) : (
             <FlatList
               data={orders}
@@ -177,6 +191,7 @@ const CustomerProfile = ({ route }) => {
           )}
         </View>
       </ScrollView>
+
       {/* Editing Modal */}
       <Modal
         visible={editingCustomer !== null}
@@ -221,7 +236,7 @@ const CustomerProfile = ({ route }) => {
                 style={[
                   styles.input,
                   {
-                    height: Math.max(40, editingCustomer?.address.length * 0.9),
+                    height: Math.max(40, editingCustomer?.address.length * 0.4),
                   },
                 ]}
                 value={editingCustomer?.address}
@@ -312,12 +327,15 @@ const styles = StyleSheet.create({
   customerDetails: {
     marginBottom: 20,
     marginTop: 10,
-    backgroundColor: "#CDE8E5",
+    backgroundColor: "#FBF9F1",
     padding: 15,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#000",
     position: "relative",
+  },
+  manageRow: {
+    flexDirection: "row",
   },
   customerInfoHeadingText: {
     fontSize: 18,
@@ -327,8 +345,13 @@ const styles = StyleSheet.create({
   },
   CustomerValue: {
     fontSize: 16,
+    marginBottom: 5,
+    color: "#000",
+    width: 280,
+    flex: 1,
   },
   orderDetails: {
+    backgroundColor: "#CAF4FF",
     marginTop: 25,
     height: 350,
     borderColor: "#000",
@@ -349,7 +372,7 @@ const styles = StyleSheet.create({
   orderCard: {
     borderWidth: 1,
     borderColor: "#000",
-    backgroundColor: "#CDE8E5",
+    backgroundColor: "#FBF9F1",
     borderRadius: 5,
     padding: 10,
     height: 250,
@@ -368,30 +391,42 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FBF9F1",
     padding: 20,
-    width: "80%",
+    width: 365,
     borderRadius: 10,
     alignItems: "center",
   },
   modalTitle: {
-    fontSize: 18,
+    width: 340,
+    fontSize: 22,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#000",
+    borderStyle: "dashed",
     fontWeight: "bold",
     marginBottom: 10,
   },
   inputRow: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
+    height: 60,
     marginBottom: 10,
   },
   inputLabel: {
-    marginRight: 10,
-    fontSize: 16,
+    flex: 1,
+    marginRight: -5,
+    padding: 5,
+    fontSize: 18,
+    width: 330,
     fontWeight: "bold",
   },
   input: {
-    flex: 1,
     height: 40,
+    width: 330,
+    margin: -10,
+    backgroundColor: "#AAD7D9",
+    borderRadius: 10,
     borderColor: "gray",
     borderWidth: 1,
     paddingHorizontal: 10,
@@ -409,6 +444,12 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     fontSize: 16,
     fontWeight: "bold",
+  },
+  saveButton: {
+    marginRight: 20,
+    width: 90,
+    borderRadius: 5,
+    alignItems: "center",
   },
   cancelButton: {
     backgroundColor: "#f44336",

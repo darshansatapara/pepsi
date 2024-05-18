@@ -10,6 +10,7 @@ import AddCustomerPage from "./AddCustomerPage";
 import AddNewOrder from "./AddNewOrder";
 import CustomerProfile from "./CustomerProfilePage";
 import { setStatusBarNetworkActivityIndicatorVisible } from "expo-status-bar";
+import { OrdersDataProvider } from "../context/OrdersDataContext";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();

@@ -1,18 +1,14 @@
 import React from "react";
 import { StyleSheet } from "react-native";
 import Navigation from "./app/components/Navigation";
+import { OrdersDataProvider } from "./app/context/OrdersDataContext";
 
 export default function App() {
   return (
     <>
-      <Navigation />
+      <OrdersDataProvider>
+        <Navigation />
+      </OrdersDataProvider>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-});

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -17,10 +17,14 @@ import client from "../axios";
 import { differenceInDays, parse, format, isSameDay } from "date-fns";
 import { Card, DataTable } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
+import {
+  OrdersDataProvider,
+  useOrdersData,
+} from "../context/OrdersDataContext";
 
 const availableProducts = ["Red Pepsi", "Black Pepsi", "Yellow Pepsi"];
 const OrderPage = ({ navigation }) => {
-  const [ordersDetails, setOrdersDetails] = useState([]);
+  const { ordersDetails, setOrdersDetails, fatchOrdersData } = useOrdersData();
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [editedQuantities, setEditedQuantities] = useState({});
@@ -37,28 +41,6 @@ const OrderPage = ({ navigation }) => {
   useEffect(() => {
     fatchOrdersData();
   }, []);
-
-  /// fathc the all orders data
-  const fatchOrdersData = async () => {
-    try {
-      const response = await client.get("/api/Order/getAllOrders");
-      if (response && response.data && Array.isArray(response.data)) {
-        const transformedOrders = response.data.map((order) => ({
-          ...order,
-          orderDetails: [
-            { product: "Red Pepsi", quantity: order.redPepsiQuantity },
-            { product: "Black Pepsi", quantity: order.blackPepsiQuantity },
-            { product: "Yellow Pepsi", quantity: order.yellowPepsiQuantity },
-          ],
-        }));
-        setOrdersDetails(transformedOrders);
-      } else {
-        console.error("Invalid response data:", response);
-      }
-    } catch (error) {
-      console.error("Error finding the Order Data ", error);
-    }
-  };
 
   useEffect(() => {
     if (!searchText && !selectedDate) {
@@ -148,27 +130,24 @@ const OrderPage = ({ navigation }) => {
           paymentStatus: editedPaymentStatus,
           totalAmount: totalAmount.totalAmount,
         };
-        console.log(totalAmount);
       } else {
         updatedOrderDetails = {
           redPepsiQuantity: selectedOrder.redPepsiQuantity,
           blackPepsiQuantity: selectedOrder.blackPepsiQuantity,
           yellowPepsiQuantity: selectedOrder.yellowPepsiQuantity,
           paymentStatus: selectedOrder.paymentStatus,
-          totalAmount: selectedOrder.totalAmount, // Retain the existing total amount
+          totalAmount: selectedOrder.totalAmount,
         };
       }
 
-      const orderId = selectedOrder.orderID; // Extract orderID
-      const _id = selectedOrder._id; // Extract _id (assuming _id is present in selectedOrder)
+      const orderId = selectedOrder.orderID;
+      const _id = selectedOrder._id;
 
       // Pass both orderId and _id to the backend API
       const response = await client.put(
-        `/api/Order/updateOrder/${orderId}/${_id}`, // Modify the API endpoint URL
+        `/api/Order/updateOrder/${orderId}/${_id}`,
         updatedOrderDetails
       );
-
-      // Here, response.data contains the updated order details from the server
 
       const updatedOrders = ordersDetails.map((order) => {
         if (order.orderID === selectedOrder.orderID) {
@@ -181,16 +160,14 @@ const OrderPage = ({ navigation }) => {
             totalAmount: response.totalAmount, // Update the total amount
           };
         }
-        console.log("totalammount", response.totalAmount);
         return order;
       });
 
       setOrdersDetails(updatedOrders);
       setEditModalVisible(false);
-      fatchOrdersData(); // <-- This line seems redundant, as you're already updating ordersDetails state
+      fatchOrdersData();
     } catch (error) {
       console.error("Error updating order:", error);
-      // Handle error
     }
   };
 
