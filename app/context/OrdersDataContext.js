@@ -1,4 +1,3 @@
-// OrdersDataContext.js
 import React, { createContext, useContext, useState } from "react";
 import client from "../axios";
 
@@ -6,7 +5,9 @@ const OrdersDataContext = createContext();
 
 export const OrdersDataProvider = ({ children }) => {
   const [ordersDetails, setOrdersDetails] = useState([]);
-  
+  const [weeklyData, setWeeklyData] = useState(null);
+  const [cityWiseData, setCityWiseData] = useState(null);
+
   const fatchOrdersData = async () => {
     try {
       const response = await client.get("/api/Order/getAllOrders");
@@ -28,9 +29,37 @@ export const OrdersDataProvider = ({ children }) => {
     }
   };
 
+  const fetchDataweeklyDataAnalysis = async () => {
+    try {
+      const response = await client.get("/api/Order/weekly-analysis");
+      setWeeklyData(response.data);
+    } catch (error) {
+      console.error("Error fetching data analysis", error);
+    }
+  };
+
+  const fetchCityWiseAnalysis = async () => {
+    try {
+      const response = await client.get("/api/Order/city-wise-analysis");
+      setCityWiseData(response.data);
+    } catch (error) {
+      console.error("Error fetching city-wise analysis data:", error);
+      // Optionally handle the error here
+    }
+  };
+
   return (
     <OrdersDataContext.Provider
-      value={{ ordersDetails, setOrdersDetails, fatchOrdersData }}
+      value={{
+        ordersDetails,
+        setOrdersDetails,
+        fatchOrdersData,
+        fetchDataweeklyDataAnalysis,
+        weeklyData,
+        setWeeklyData,
+        fetchCityWiseAnalysis,
+        cityWiseData,
+      }}
     >
       {children}
     </OrdersDataContext.Provider>

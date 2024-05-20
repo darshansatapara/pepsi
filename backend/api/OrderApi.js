@@ -31,6 +31,7 @@ router.post("/addNewOrder", async (req, res) => {
       mobileNumber,
       customerID,
       customerName,
+      city,
       orderDate,
       redPepsiQuantity,
       blackPepsiQuantity,
@@ -44,6 +45,7 @@ router.post("/addNewOrder", async (req, res) => {
       mobileNumber,
       customerID,
       customerName,
+      city,
       orderDate,
       redPepsiQuantity,
       blackPepsiQuantity,
@@ -54,7 +56,6 @@ router.post("/addNewOrder", async (req, res) => {
 
     // Save the new order to the database
     await order.save();
-    console.log(totalAmount);
     // Send success response
     res.status(201).json({ message: "Order added successfully.", order });
   } catch (error) {
@@ -85,8 +86,12 @@ router.get("/byCustomerId/:customerID", async (req, res) => {
     const customerID = req.params.customerID;
     // console.log(customerID);
     const orders = await Order.find({ customerID: customerID });
+    const TotalExpence = orders.reduce(
+      (sum, orders) => sum + orders.totalAmount,
+      0
+    );
     if (orders) {
-      res.status(200).json(orders);
+      res.status(200).json(orders, TotalExpence);
     } else {
       res.status(404).json({ message: "No orders found for this customer" });
     }
@@ -207,19 +212,145 @@ router.post("/calculateTotalAmount", async (req, res) => {
   }
 });
 
-module.exports = router;
+//week analysis
+const getWeeklyAnalysis = (orders) => {
+  const result = {};
+  orders.forEach((order) => {
+    try {
+      // Convert DD-MM-YYYY to YYYY-MM-DD
+      const [day, month, year] = order.orderDate.split("-");
+      const isoDateString = `${year}-${month}-${day}`;
+      const date = new Date(isoDateString);
+      if (isNaN(date)) {
+        return; // Skip this order
+      }
+      const dayPart = date.toISOString().split("T")[0]; // Get the date part
 
-// // Message formate
-// const orderDetailsMessage = `🎉 Thank you for your order! 🎉\n\nOrder ID: ${
-//   orderDetails.orderID
-// }\nCustomer ID: ${customerDetails.customerID.toString()}\nCustomer Name: ${
-//   customerDetails.customerName
-// }\nOrder Date: ${
-//   orderDetails.orderDate
-// }\n\nOrder Details:\nRed Pepsi: ${
-//   orderDetails.red
-// }\nBlack Pepsi: ${orderDetails.black}\nYellow Pepsi: ${
-//   orderDetails.yellow
-// }\n\nTotal Amount: ₹${
-//   totalAmount.totalAmount
-// }\nPayment Status: ${paymentStatus}`;
+      if (!result[dayPart]) {
+        result[dayPart] = { totalAmount: 0, orders: [] };
+      }
+      result[dayPart].totalAmount += order.totalAmount;
+      result[dayPart].orders.push(order);
+    } catch (error) {
+      console.error("Error processing order:", order, error);
+    }
+  });
+
+  // Calculate weekly total
+  const weeklyTotal = Object.values(result).reduce(
+    (acc, dayData) => acc + dayData.totalAmount,
+    0
+  );
+
+  return { dailyData: result, weeklyTotal };
+};
+
+router.get("/weekly-analysis", async (req, res) => {
+  try {
+    const orders = await Order.find();
+    if (!orders || orders.length === 0) {
+      throw new Error("No orders found");
+    }
+    const analysis = getWeeklyAnalysis(orders);
+
+    res.json(analysis);
+  } catch (err) {
+    console.error("Error during weekly analysis:", err);
+    res.status(500).send({ error: err.message });
+  }
+});
+
+// Function to get the analysis of city-wise orders with total amount and count
+const getCityWiseOrderAnalysis = (orders) => {
+  const cityWiseAnalysisData = {};
+
+  orders.forEach((order) => {
+    const city = order.city;
+    // If the city doesn't exist in the cityWiseAnalysisData object, initialize it
+    if (!cityWiseAnalysisData[city]) {
+      cityWiseAnalysisData[city] = { totalAmount: 0, count: 0 };
+    }
+    // Increment the total amount and count for the city
+    cityWiseAnalysisData[city].totalAmount += order.totalAmount || 0; // Ensure order amount is valid
+    cityWiseAnalysisData[city].count++;
+  });
+  return cityWiseAnalysisData;
+};
+
+// Define the API endpoint for city-wise analysis
+router.get("/city-wise-analysis", async (req, res) => {
+  try {
+    const orders = await Order.find();
+
+    if (!orders || orders.length === 0) {
+      throw new Error("No orders found");
+    }
+    const cityWiseAnalysisData = getCityWiseOrderAnalysis(orders);
+
+    res.json(cityWiseAnalysisData);
+  } catch (err) {
+    console.error("Error during city-wise analysis:", err);
+    res.status(500).send({ error: err.message });
+  }
+});
+
+// get the year
+router.get("/available-years", async (req, res) => {
+  try {
+    console.log("i have year");
+    const years = await Order.distinct("orderDate");
+    const availableYears = years
+      .map((date) => date.split("-")[2])
+      .filter((value, index, self) => self.indexOf(value) === index);
+    res.json(availableYears);
+    console.log("i have", availableYears);
+  } catch (err) {
+    console.error("Error fetching available years:", err);
+    res.status(500).send({ error: err.message });
+  }
+});
+
+// API to get total amount based on selected year, month, and date
+router.get("/date-wise-analysis", async (req, res) => {
+  try {
+    console.log("Fetching date-wise analysis data");
+    const { year, month, date } = req.query;
+    let matchCriteria = {};
+
+    // Format month and date to ensure consistency with database format
+    const formattedMonth = month.padStart(2, '0'); // Add leading zero if necessary
+    const formattedDate = date.padStart(2, '0'); // Add leading zero if necessary
+
+    // Construct the match criteria based on provided query params
+    if (year) {
+      matchCriteria = { ...matchCriteria, orderDate: { $regex: `^${formattedDate}-${formattedMonth}-${year}` } };
+    }
+    if (month && !date) {
+      matchCriteria = { ...matchCriteria, orderDate: { $regex: `^\\d{2}-${formattedMonth}-${year}` } };
+    }
+    if (!month && !date) {
+      matchCriteria = { ...matchCriteria, orderDate: { $regex: `^\\d{2}-\\d{1}-${year}` } };
+    }
+
+    console.log("Matched Criteria:", matchCriteria);
+
+    // Fetch orders matching the criteria
+    const orders = await Order.find(matchCriteria);
+    console.log("Orders:", orders)
+
+    if (!orders || orders.length === 0) {
+      return res.json({ totalAmount: 0 });
+    }
+ 
+    // Calculate the total amount
+    const totalAmount = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+    console.log("Total amount:", totalAmount);
+    res.json({ totalAmount });
+  } catch (err) {
+    console.error("Error fetching date-wise analysis data:", err);
+    res.status(500).send({ error: err.message });
+  }
+});
+
+
+module.exports = router;

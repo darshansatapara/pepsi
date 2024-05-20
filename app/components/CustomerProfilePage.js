@@ -191,6 +191,7 @@ const CustomerProfile = ({ route }) => {
           )}
         </View>
       </ScrollView>
+      <Text>{customer.Total}</Text>
 
       {/* Editing Modal */}
       <Modal

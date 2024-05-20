@@ -18,6 +18,7 @@ const AddNewOrderPage = ({ navigation, route }) => {
   const [customerDetails, setCustomerDetails] = useState({
     customerID: "",
     customerName: "",
+    city: "",
   });
   const [orderDetails, setOrderDetails] = useState({
     red: 0,
@@ -34,9 +35,10 @@ const AddNewOrderPage = ({ navigation, route }) => {
 
   useEffect(() => {
     const date = new Date();
-    const formattedDate = `${date.getDate()}-${
-      date.getMonth() + 1
-    }-${date.getFullYear()}`;
+    const formattedDate = `${("0" + date.getDate()).slice(-2)}-${(
+      "0" +
+      (date.getMonth() + 1)
+    ).slice(-2)}-${date.getFullYear()}`;
     setCurrentDate(formattedDate);
   }, []);
 
@@ -102,6 +104,7 @@ const AddNewOrderPage = ({ navigation, route }) => {
         mobileNumber,
         customerID: customerDetails.customerID,
         customerName: customerDetails.customerName,
+        city: customerDetails.city,
         orderDate: currentDate,
         redPepsiQuantity: orderDetails.red,
         blackPepsiQuantity: orderDetails.black,
@@ -109,7 +112,7 @@ const AddNewOrderPage = ({ navigation, route }) => {
         totalAmount: totalAmount.totalAmount,
         paymentStatus,
       });
-      console.log("Order placed successfully:", response.data);
+      // console.log("Order placed successfully:", response.data);
 
       Alert.alert(
         "Success",
@@ -169,6 +172,16 @@ const AddNewOrderPage = ({ navigation, route }) => {
           <TextInput
             style={styles.input2}
             value={customerDetails.customerName}
+            editable={false}
+          />
+        </View>
+        <View style={styles.inputRow}>
+          <View>
+            <Text style={styles.label}>City :</Text>
+          </View>
+          <TextInput
+            style={styles.input2}
+            value={customerDetails.city}
             editable={false}
           />
         </View>

@@ -12,6 +12,7 @@
     "axios": "^1.6.8",
     "body-parser": "^1.20.2",
     "express": "^4.19.2",
+    "fs": "^0.0.1-security",
     "mongodb": "^6.6.1",
     "mongoose": "^8.3.5",
     "react-router-dom": "^6.23.1"
