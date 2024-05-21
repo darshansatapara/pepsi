@@ -47,7 +47,7 @@ const WeekAnalysis = () => {
             style={{ ...styles.chart, marginVertical: 8, borderRadius: 16 }}
           />
           <Text style={styles.total}>
-            Weekly Total: ${weeklyData.weeklyTotal}
+            Weekly Total: ₹ {weeklyData.weeklyTotal}
           </Text>
         </View>
       </ScrollView>
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     padding: 5,
     alignSelf: "center",
     justifyContent: "center",
-    backgroundColor: "#BED7DC",
+    backgroundColor: "#CDE8E5",
   },
   chartContainer: {
     marginBottom: 10,

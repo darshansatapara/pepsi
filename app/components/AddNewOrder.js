@@ -12,9 +12,18 @@ import {
 } from "react-native";
 import client from "../axios";
 import { ScrollView } from "react-native-gesture-handler";
+import { useOrdersData } from "../context/OrdersDataContext";
+import sendWhatsAppMessage from "./sendWhatsAppMessage";
 
 const AddNewOrderPage = ({ navigation, route }) => {
   const { fatchOrdersData } = route.params;
+  const {
+    fetchCityWiseAnalysis,
+    fetchDataweeklyDataAnalysis,
+    fetchDateWiseAnalysis,
+    fetchLastCurrentMonthData,
+    fetchLastCurrentYearData,
+  } = useOrdersData();
   const [customerDetails, setCustomerDetails] = useState({
     customerID: "",
     customerName: "",
@@ -112,7 +121,7 @@ const AddNewOrderPage = ({ navigation, route }) => {
         totalAmount: totalAmount.totalAmount,
         paymentStatus,
       });
-      // console.log("Order placed successfully:", response.data);
+      const result = await response.data.order;
 
       Alert.alert(
         "Success",
@@ -121,10 +130,18 @@ const AddNewOrderPage = ({ navigation, route }) => {
           {
             text: "OK",
             onPress: () => {
+              sendWhatsAppMessage(
+                result // Add mobileNumber here
+              );
               setMobileNumber("");
               setCustomerDetails({ customerID: "", customerName: "" });
               setOrderDetails({ red: 0, black: 0, yellow: 0 });
               fatchOrdersData();
+              fetchCityWiseAnalysis();
+              fetchDataweeklyDataAnalysis();
+              fetchDateWiseAnalysis();
+              fetchLastCurrentMonthData();
+              fetchLastCurrentYearData();
               navigation.goBack();
             },
           },

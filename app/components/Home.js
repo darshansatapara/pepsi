@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
 import WeekAnalysis from "../analysis/WeekAnalysis";
 import CityWiseOrderAnalysis from "../analysis/CityWiseAnalysis";
 import DateWiseAnalysis from "../analysis/DateWiseAnalysis";
+import LastYMD from "../analysis/LastYMD";
 
 const HomeScreen = ({ navigation }) => {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -14,9 +15,10 @@ const HomeScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <ScrollView>
-        <DateWiseAnalysis key={refreshKey} refreshScreen={refreshScreen} />
-        <WeekAnalysis key={refreshKey} refreshScreen={refreshScreen} />
-        <CityWiseOrderAnalysis key={refreshKey} refreshScreen={refreshScreen} />
+        <LastYMD />
+        <CityWiseOrderAnalysis />
+        <WeekAnalysis />
+        <DateWiseAnalysis />
       </ScrollView>
     </View>
   );
@@ -24,8 +26,15 @@ const HomeScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
+    borderTopColor: "#AAAAAA",
+    borderBottomColor: "#AAAAAA",
+    borderLeftColor: 0,
+    borderRightColor: 0,
+    borderWidth: 2,
     flex: 1,
     backgroundColor: "#EEF7FF",
+    paddingTop: 2,
+    padding: 8,
   },
 });
 

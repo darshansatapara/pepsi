@@ -24,7 +24,16 @@ import {
 
 const availableProducts = ["Red Pepsi", "Black Pepsi", "Yellow Pepsi"];
 const OrderPage = ({ navigation }) => {
-  const { ordersDetails, setOrdersDetails, fatchOrdersData } = useOrdersData();
+  const {
+    ordersDetails,
+    setOrdersDetails,
+    fatchOrdersData,
+    fetchCityWiseAnalysis,
+    fetchDataweeklyDataAnalysis,
+    fetchDateWiseAnalysis,
+    fetchLastCurrentMonthData,
+    fetchLastCurrentYearData,
+  } = useOrdersData();
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [editedQuantities, setEditedQuantities] = useState({});
@@ -166,6 +175,11 @@ const OrderPage = ({ navigation }) => {
       setOrdersDetails(updatedOrders);
       setEditModalVisible(false);
       fatchOrdersData();
+      fetchCityWiseAnalysis();
+      fetchDataweeklyDataAnalysis();
+      fetchDateWiseAnalysis();
+      fetchLastCurrentMonthData();
+      fetchLastCurrentYearData();
     } catch (error) {
       console.error("Error updating order:", error);
     }

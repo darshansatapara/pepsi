@@ -1,30 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { View, Text, StyleSheet, Dimensions, ScrollView } from "react-native";
 import { PieChart } from "react-native-chart-kit";
-import client from "../axios";
+import { useOrdersData } from "../context/OrdersDataContext";
 
 const CityWiseOrderAnalysis = () => {
-  const [cityWiseData, setCityWiseData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    fetchAvailableYears,
+    fetchCityWiseAnalysis,
+    Cityloading,
+    cityWiseData,
+  } = useOrdersData();
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await client.get("/api/Order/city-wise-analysis");
-        setCityWiseData(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching city-wise analysis data:", error);
-        setError(error.message);
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchCityWiseAnalysis();
   }, []);
 
-  if (loading) {
+  if (Cityloading) {
     return (
       <View style={styles.container}>
         <Text>Loading...</Text>
@@ -48,23 +40,22 @@ const CityWiseOrderAnalysis = () => {
     );
   }
 
-  // Extract labels and data from the analysis data object
   const labels = Object.keys(cityWiseData);
-  const values = labels.map((label) => cityWiseData[label].totalAmount);
-
-  // Prepare data for the pie chart
   const pieData = labels.map((label, index) => ({
-    name: label,
-    value: values[index],
-    color: `rgb(${index * 50}, ${255 - index * 50}, ${Math.random() * 200})`, // Random color for each slice
+    name: `${label} (${cityWiseData[label].count})`,
+    population: cityWiseData[label].totalAmount,
+    color: `rgb(${index * 50}, ${255 - index * 50}, ${Math.random() * 200})`,
+    legendFontColor: "#000",
+    legendFontSize: 15,
   }));
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>City-wise Order Analysis</Text>
+      <ScrollView horizontal>
       <PieChart
         data={pieData}
-        width={Dimensions.get("window").width}
+        width={500}
         height={200}
         chartConfig={{
           backgroundColor: "#ffffff",
@@ -72,12 +63,13 @@ const CityWiseOrderAnalysis = () => {
           color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
           labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
         }}
-        accessor="value"
+        accessor="population"
         backgroundColor="transparent"
-        paddingLeft="0"
+        paddingLeft="-15"
         absolute
         style={styles.chart}
       />
+      </ScrollView>
     </View>
   );
 };
@@ -86,8 +78,8 @@ const styles = StyleSheet.create({
   container: {
     height: 280,
     width: 370,
-    marginBottom: 10,
-    marginTop: 10,
+    marginBottom: 2,
+    marginTop: 2,
     borderRadius: 10,
     borderColor: "#000",
     borderWidth: 1,
@@ -95,8 +87,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     justifyContent: "center",
     alignSelf: "center",
-    justifyContent: "center",
-    backgroundColor: "#BED7DC",
+    backgroundColor: "#CDE8E5",
   },
   chart: {
     marginVertical: 8,
@@ -105,7 +96,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     paddingLeft: 10,
-    marginTop: 0,
+    marginTop: 10,
     fontWeight: "bold",
   },
 });

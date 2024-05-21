@@ -15,15 +15,14 @@ router.get("/getAllOrders", async (req, res) => {
   }
 });
 // Add new order api
-router.post("/addNewOrder", async (req, res) => {
+router.post("/addNewOrder", async (req, res, next) => {
   try {
     const lastOrder = await Order.findOne()
       .sort({ orderID: -1 })
       .maxTimeMS(10000);
 
-    // Increment the last customerID by 1 to get the new customerID
+    // Increment the last orderID by 1 to get the new orderID
     const newOrderID = lastOrder ? lastOrder.orderID + 1 : 1;
-    // Generate the order ID
     const orderID = newOrderID;
 
     // Extract order data from request body
@@ -56,12 +55,22 @@ router.post("/addNewOrder", async (req, res) => {
 
     // Save the new order to the database
     await order.save();
+
     // Send success response
     res.status(201).json({ message: "Order added successfully.", order });
   } catch (error) {
     console.error("Error adding new order:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    next(error);
   }
+});
+
+// Error handling middleware
+router.use((err, req, res, next) => {
+  console.error(err.stack);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(500).json({ message: "Internal Server Error" });
 });
 
 // find order by the orderID
@@ -81,17 +90,17 @@ router.get("/byOrderId/:fatchOrderByOrderID", async (req, res) => {
 });
 
 // fatch all Orders By CustomerID
-router.get("/byCustomerId/:customerID", async (req, res) => {
+router.get("/bycustomerid/:customerID", async (req, res) => {
   try {
     const customerID = req.params.customerID;
-    // console.log(customerID);
     const orders = await Order.find({ customerID: customerID });
-    const TotalExpence = orders.reduce(
-      (sum, orders) => sum + orders.totalAmount,
+    const totalExpense = orders.reduce(
+      (sum, order) => sum + order.totalAmount,
       0
     );
-    if (orders) {
-      res.status(200).json(orders, TotalExpence);
+
+    if (orders.length > 0) {
+      res.status(200).json({ orders, totalExpense });
     } else {
       res.status(404).json({ message: "No orders found for this customer" });
     }
@@ -133,7 +142,7 @@ router.put("/updateOrder/:orderId/:_id", async (req, res) => {
     }
 
     res.json(updatedOrder);
-    console.log(updatedOrder);
+  
   } catch (error) {
     console.error("Error updating order:", error);
     res.status(500).json({ error: "Server error" });
@@ -274,6 +283,7 @@ const getCityWiseOrderAnalysis = (orders) => {
     cityWiseAnalysisData[city].totalAmount += order.totalAmount || 0; // Ensure order amount is valid
     cityWiseAnalysisData[city].count++;
   });
+
   return cityWiseAnalysisData;
 };
 
@@ -297,13 +307,11 @@ router.get("/city-wise-analysis", async (req, res) => {
 // get the year
 router.get("/available-years", async (req, res) => {
   try {
-    console.log("i have year");
     const years = await Order.distinct("orderDate");
     const availableYears = years
       .map((date) => date.split("-")[2])
       .filter((value, index, self) => self.indexOf(value) === index);
     res.json(availableYears);
-    console.log("i have", availableYears);
   } catch (err) {
     console.error("Error fetching available years:", err);
     res.status(500).send({ error: err.message });
@@ -313,44 +321,137 @@ router.get("/available-years", async (req, res) => {
 // API to get total amount based on selected year, month, and date
 router.get("/date-wise-analysis", async (req, res) => {
   try {
-    console.log("Fetching date-wise analysis data");
     const { year, month, date } = req.query;
     let matchCriteria = {};
 
-    // Format month and date to ensure consistency with database format
-    const formattedMonth = month.padStart(2, '0'); // Add leading zero if necessary
-    const formattedDate = date.padStart(2, '0'); // Add leading zero if necessary
-
-    // Construct the match criteria based on provided query params
-    if (year) {
-      matchCriteria = { ...matchCriteria, orderDate: { $regex: `^${formattedDate}-${formattedMonth}-${year}` } };
-    }
-    if (month && !date) {
-      matchCriteria = { ...matchCriteria, orderDate: { $regex: `^\\d{2}-${formattedMonth}-${year}` } };
-    }
-    if (!month && !date) {
-      matchCriteria = { ...matchCriteria, orderDate: { $regex: `^\\d{2}-\\d{1}-${year}` } };
+    if (year && month && date) {
+      matchCriteria.orderDate = { $regex: `^${date}-${month}-${year}$` };
+    } else if (year && month) {
+      matchCriteria.orderDate = { $regex: `^\\d{2}-${month}-${year}$` };
+    } else if (year) {
+      matchCriteria.orderDate = { $regex: `^\\d{2}-\\d{2}-${year}$` };
+    } else {
+      return res.json({ totalAmount: 0, totalCount: 0 });
     }
 
-    console.log("Matched Criteria:", matchCriteria);
-
-    // Fetch orders matching the criteria
     const orders = await Order.find(matchCriteria);
-    console.log("Orders:", orders)
 
-    if (!orders || orders.length === 0) {
-      return res.json({ totalAmount: 0 });
-    }
- 
-    // Calculate the total amount
-    const totalAmount = orders.reduce((sum, order) => sum + order.totalAmount, 0);
-    console.log("Total amount:", totalAmount);
-    res.json({ totalAmount });
+    const totalAmount = orders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
+    const totalCount = orders.length;
+
+    res.json({ totalAmount, totalCount });
   } catch (err) {
     console.error("Error fetching date-wise analysis data:", err);
     res.status(500).send({ error: err.message });
   }
 });
 
+// Fetch total amount and count for the previous year
+router.get("/last-current-year-analysis", async (req, res) => {
+  try {
+    const currentYear = new Date().getFullYear();
+    const previousYear = currentYear - 1;
+
+    const lastYearOrders = await Order.find({
+      orderDate: {
+        $regex: `^\\d{2}-\\d{2}-${previousYear}$`,
+      },
+    });
+
+    const currentYearOrders = await Order.find({
+      orderDate: {
+        $regex: `^\\d{2}-\\d{2}-${currentYear}$`,
+      },
+    });
+
+    const lastYearTotalAmount = lastYearOrders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
+    const lastYearTotalCount = lastYearOrders.length;
+
+    const currentYearTotalAmount = currentYearOrders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
+    const currentYearTotalCount = currentYearOrders.length;
+
+    res.json({
+      lastYear: {
+        totalAmount: lastYearTotalAmount,
+        totalCount: lastYearTotalCount,
+      },
+      currentYear: {
+        totalAmount: currentYearTotalAmount,
+        totalCount: currentYearTotalCount,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching last and current year analysis data:", err);
+    res.status(500).send({ error: err.message });
+  }
+});
+
+router.get("/last-current-month-analysis", async (req, res) => {
+  try {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() is zero-indexed
+
+    let previousYear = currentYear;
+    let previousMonth = currentMonth - 1;
+
+    if (previousMonth === 0) {
+      previousMonth = 12;
+      previousYear -= 1;
+    }
+
+    const formattedPreviousMonth =
+      previousMonth < 10 ? `0${previousMonth}` : `${previousMonth}`;
+
+    const lastMonthOrders = await Order.find({
+      orderDate: {
+        $regex: `^\\d{2}-${formattedPreviousMonth}-${previousYear}$`,
+      },
+    });
+
+    const currentMonthOrders = await Order.find({
+      orderDate: {
+        $regex: `^\\d{2}-${
+          currentMonth < 10 ? `0${currentMonth}` : currentMonth
+        }-${currentYear}$`,
+      },
+    });
+
+    const lastMonthTotalAmount = lastMonthOrders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
+    const lastMonthTotalCount = lastMonthOrders.length;
+
+    const currentMonthTotalAmount = currentMonthOrders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
+    const currentMonthTotalCount = currentMonthOrders.length;
+
+    res.json({
+      lastMonth: {
+        totalAmount: lastMonthTotalAmount,
+        totalCount: lastMonthTotalCount,
+      },
+      currentMonth: {
+        totalAmount: currentMonthTotalAmount,
+        totalCount: currentMonthTotalCount,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching last and current month analysis data:", err);
+    res.status(500).send({ error: err.message });
+  }
+});
 
 module.exports = router;

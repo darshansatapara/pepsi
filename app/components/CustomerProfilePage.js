@@ -40,11 +40,15 @@ const CustomerProfile = ({ route }) => {
       const orderResponse = await client.get(
         `/api/Order/bycustomerid/${customerID}`
       );
-      setOrders(
-        Array.isArray(orderResponse.data)
-          ? orderResponse.data
-          : [orderResponse.data]
-      );
+
+      const { orders, totalExpense } = orderResponse.data;
+      setOrders(Array.isArray(orders) ? orders : [orders]);
+
+      // Optionally, add total expense to customer data
+      setCustomer((prevCustomer) => ({
+        ...prevCustomer,
+        totalExpense,
+      }));
     } catch (error) {
       console.error("Error fetching customer data:", error);
     }
