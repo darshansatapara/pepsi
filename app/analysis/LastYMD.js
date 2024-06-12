@@ -8,8 +8,6 @@ const AnalysisSummary = () => {
     fetchLastCurrentYearData,
     lastCurrentYearData,
     lastCurrentMonthData,
-    setLastCurrentMonthData,
-    setLastCurrentYearData,
   } = useOrdersData();
   useEffect(() => {
     fetchLastCurrentYearData();

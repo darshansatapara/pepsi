@@ -5,7 +5,6 @@ import { useOrdersData } from "../context/OrdersDataContext";
 
 const CityWiseOrderAnalysis = () => {
   const {
-    fetchAvailableYears,
     fetchCityWiseAnalysis,
     Cityloading,
     cityWiseData,

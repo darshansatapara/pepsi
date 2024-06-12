@@ -8,9 +8,7 @@ import {
   StyleSheet,
 } from "react-native";
 import client from "../axios"; // Import Axios for making API requests
-import { LinearGradient } from "expo-linear-gradient";
 import { Entypo } from "@expo/vector-icons";
-// import { white } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
 
 const CustomerCard = ({ customer, onPress }) => (
   <View style={styles.customerCard}>
@@ -37,14 +35,15 @@ const CustomerCard = ({ customer, onPress }) => (
 
 const CustomerDetailsPage = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchID, setSearchID] = useState("");
   const [customers, setCustomers] = useState([]);
   const [filteredCustomers, setFilteredCustomers] = useState([]);
 
   useEffect(() => {
-    fatchCustomerData();
+    fetchCustomerData();
   }, []); // Fetch customer data when the component mounts
 
-  const fatchCustomerData = async () => {
+  const fetchCustomerData = async () => {
     try {
       const response = await client.get("/api/Customer/allcustomers");
       setCustomers(response.data);
@@ -55,42 +54,49 @@ const CustomerDetailsPage = ({ navigation }) => {
   };
 
   useEffect(() => {
-    // Filter customers based on search query
-    const filtered = searchQuery
-      ? customers.filter(
-          (customer) =>
-            customer.customerName
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase()) ||
-            customer.mobileNumber.includes(searchQuery)
-        )
-      : customers;
+    // Filter customers based on search query (name or mobile number) and ID
+    const filtered = customers.filter((customer) => {
+      const matchesNameOrMobile =
+        customer.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.mobileNumber.includes(searchQuery);
+      const matchesID = customer.customerID.toString().includes(searchID);
+      return matchesNameOrMobile && matchesID;
+    });
     setFilteredCustomers(filtered);
-  }, [searchQuery, customers]);
+  }, [searchQuery, searchID, customers]);
 
   const handleAddCustomer = () => {
     navigation.navigate("AddCustomer", {
-      fatchCustomerData: fatchCustomerData,
+      fetchCustomerData: fetchCustomerData,
     });
   };
 
   const handleCustomerPress = (customer) => {
-    // console.log("customer id", customer.customerID);
     navigation.navigate("CustomerProfile", {
       customerID: customer.customerID,
-      fatchCustomerData: fatchCustomerData,
+      fetchCustomerData: fetchCustomerData,
     });
   };
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Search by name or mobile number"
-        value={searchQuery}
-        placeholderTextColor={"#000"}
-        onChangeText={setSearchQuery}
-      />
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by name or mobile number"
+          value={searchQuery}
+          placeholderTextColor={"#000"}
+          onChangeText={setSearchQuery}
+        />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by ID"
+          value={searchID}
+          placeholderTextColor={"#000"}
+          onChangeText={setSearchID}
+          keyboardType="numeric"
+        />
+      </View>
       <ScrollView style={styles.customerList}>
         {filteredCustomers.length === 0 ? (
           <Text style={styles.NoRecords}>No customers found</Text>
@@ -126,7 +132,7 @@ const styles = StyleSheet.create({
   TextColor: {
     color: "#000",
     fontSize: 17,
-    marginBottom: 5
+    marginBottom: 5,
   },
   NoRecords: {
     color: "#240750",
@@ -136,9 +142,13 @@ const styles = StyleSheet.create({
     padding: 80,
     alignSelf: "center",
   },
+  searchContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
   searchInput: {
     paddingHorizontal: 10,
-    marginRight: 2,
     height: 40,
     borderColor: "#000",
     backgroundColor: "rgba(224, 218, 218, 0.5)",
@@ -146,7 +156,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     color: "#000",
     borderRadius: 15,
-    marginBottom: 10,
+    flex: 1,
+    marginRight: 5,
   },
   customerList: {
     flex: 1,
@@ -164,7 +175,6 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 6,
   },
-
   customerDetails: {
     flex: 5,
   },

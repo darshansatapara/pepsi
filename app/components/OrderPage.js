@@ -318,7 +318,8 @@ const OrderPage = ({ navigation }) => {
 
   const filteredOrders = ordersDetails.filter(
     (order) =>
-      order.customerName.toLowerCase().includes(searchText.toLowerCase()) &&
+      (order.customerName.toLowerCase().includes(searchText.toLowerCase()) ||
+        order.orderID.toString().toLowerCase() === searchText.toLowerCase()) &&
       (!selectedDate ||
         isSameDay(
           parse(order.orderDate, "dd-MM-yyyy", new Date()),
@@ -342,7 +343,7 @@ const OrderPage = ({ navigation }) => {
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by customer name"
+          placeholder="Search by customer name or order ID"
           placeholderTextColor={"#000"}
           value={searchText}
           onChangeText={(text) => setSearchText(text)}
@@ -399,89 +400,48 @@ const OrderPage = ({ navigation }) => {
                       [product]: text,
                     })
                   }
-                  placeholder="Enter Quantity"
                   keyboardType="numeric"
                 />
               </View>
             ))}
-            {availableOtherProducts.length > 0 && (
-              <View style={styles.inputRow}>
-                <Text style={styles.productName}>Add Other Product:</Text>
-                <Picker
-                  style={styles.picker}
-                  selectedValue={null}
-                  onValueChange={(value) => handleAddOtherProduct(value)}
-                >
-                  <Picker.Item label="-- Select Product --" value={null} />
-                  {availableOtherProducts.map((product, index) => (
-                    <Picker.Item key={index} label={product} value={product} />
-                  ))}
-                </Picker>
-              </View>
-            )}
-            <View style={styles.paymentStatusRow}>
-              <Text style={styles.paymentStatusText}>Payment Status:</Text>
-              <View style={styles.picker}>
-                <Picker
-                  selectedValue={editedPaymentStatus}
-                  onValueChange={(value) => setEditedPaymentStatus(value)}
-                >
-                  <Picker.Item label="Paid" value="Paid" />
-                  <Picker.Item label="Pending" value="Pending" />
-                </Picker>
-              </View>
-            </View>
             <View style={styles.inputRow}>
-              <Text style={styles.productName}>
-                Total Amount: {totalAmount.totalAmount}
-              </Text>
-            </View>
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={styles.SaveButton}
-                title="Save"
-                onPress={handleSaveEdit}
+              <Text style={styles.productName}>Payment Status:</Text>
+              <Picker
+                style={styles.paymentStatusPicker}
+                selectedValue={editedPaymentStatus}
+                onValueChange={(itemValue) => setEditedPaymentStatus(itemValue)}
               >
-                <Text style={styles.ButtonText}>Save</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                title="Cancel"
-                style={styles.CancelButton}
-                onPress={() => setEditModalVisible(false)}
-              >
-                <Text style={styles.ButtonText}>Cancel</Text>
-              </TouchableOpacity>
+                <Picker.Item label="Pending" value="Pending" />
+                <Picker.Item label="Completed" value="Completed" />
+              </Picker>
             </View>
+            <Text style={styles.modalText}>
+              Total Amount: ₹{totalAmount.totalAmount}
+            </Text>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleSaveEdit}
+            >
+              <Text style={styles.buttonText}>Save</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setEditModalVisible(false)}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
       {isCalendarVisible && (
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={isCalendarVisible}
-          onRequestClose={() => setIsCalendarVisible(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.calendarContainer}>
-              <CalendarPicker
-                onDateChange={(date) => {
-                  const formattedDate = date
-                    ? format(date, "dd-MM-yyyy")
-                    : null;
-                  setSelectedDate(formattedDate);
-                  setIsCalendarVisible(false);
-                }}
-              />
-              <Button
-                title="Close"
-                onPress={() => setIsCalendarVisible(false)}
-                color="#ff7043"
-              />
-            </View>
-          </View>
-        </Modal>
+        <CalendarPicker
+          onDateChange={(date) => {
+            setSelectedDate(format(date, "dd-MM-yyyy"));
+            setIsCalendarVisible(false);
+          }}
+          minDate={new Date("01-01-2020")}
+          maxDate={new Date()}
+        />
       )}
     </View>
   );

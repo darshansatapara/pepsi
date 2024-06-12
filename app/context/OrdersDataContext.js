@@ -123,8 +123,8 @@ export const OrdersDataProvider = ({ children }) => {
         fetchDateWiseAnalysis,
         totalAmount,
         setTotalAmount,
-        totalCount, // Include total count in context value
-        setTotalCount, // Provide setter for total count
+        totalCount,
+        setTotalCount,
         loading,
         setLoading,
         year,
